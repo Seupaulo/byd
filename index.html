@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico Dolphin</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; padding: 10px; margin: 0; }
+        .box { background-color: #1e1e1e; padding: 15px; border-radius: 8px; max-width: 500px; margin: 0 auto 15px auto; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        h3 { margin-top: 0; text-align: center; color: #00aa6c; font-size: 16px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        label { display: block; margin-bottom: 4px; font-size: 12px; color: #bbb; }
+        input { width: 100%; padding: 8px; border-radius: 4px; border: none; box-sizing: border-box; font-size: 14px; background-color: #333; color: #fff; }
+        button { width: 100%; padding: 10px; background-color: #00875a; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        .table-scroll { max-width: 800px; margin: 0 auto; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; min-width: 650px; }
+        th, td { padding: 8px; text-align: center; border-bottom: 1px solid #333; font-size: 12px; }
+        th { background-color: #2d2d2d; color: #00aa6c; }
+        .txt-blue { color: #57b9ff; font-weight: bold; }
+        .txt-green { color: #00ffa2; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div class="box" style="background-color: #252525;">
+    <label>Preço do kWh da sua Distribuidora (R$):</label>
+    <input type="number" id="vKwh" step="0.01" placeholder="Ex: 0.85" oninput="gravarConfig()">
+</div>
+
+<!-- FORMULÁRIO -->
+<div class="box">
+    <h3>🔋 Nova Recarga</h3>
+    <div class="grid">
+        <div>
+            <label>% Inicial da Carga:</label>
+            <input type="number" id="bIni" value="100">
+        </div>
+        <div>
+            <label>% Restante Atual:</label>
+            <input type="number" id="bRest" placeholder="Ex: 20">
+        </div>
+        <div>
+            <label>KM Total do Carro:</label>
+            <input type="number" id="kTotal" placeholder="Ex: 5200">
+        </div>
+        <div>
+            <label>Valor do Trip A (km):</label>
+            <input type="number" id="tA" step="0.1" placeholder="Ex: 285.4">
+        </div>
+    </div>
+    <button onclick="adicionarDados()">Calcular e Salvar</button>
+</div>
+
+<!-- TABELA -->
+<div class="table-scroll">
+    <table id="minhaTabela">
+        <thead>
+            <tr>
+                <th>Data</th>
+                <th>Odo. Total</th>
+                <th>Trip A</th>
+                <th>Bat. Gasta</th>
+                <th>Consumo</th>
+                <th>Custo</th>
+                <th>R$ / KM</th>
+            </tr>
+        </thead>
+        <tbody id="linhasTabela"></tbody>
+    </table>
+</div>
+
+<script>
+    window.onload = function() {
+        var kwh = localStorage.getItem('byd_kwh');
+        if (kwh) { document.getElementById('vKwh').value = kwh; }
+        desenharTabela();
+    };
+
+    function gravarConfig() {
+        var val = document.getElementById('vKwh').value;
+        localStorage.setItem('byd_kwh', val);
+        desenharTabela();
+    }
+
+    function adicionarDados() {
+        var bIni = parseFloat(document.getElementById('bIni').value);
+        var bRest = parseFloat(document.getElementById('bRest').value);
+        var kTotal = parseFloat(document.getElementById('kTotal').value);
+        var tA = parseFloat(document.getElementById('tA').value);
+        var kwhPreco = parseFloat(localStorage.getItem('byd_kwh')) || 0;
+
+        if (isNaN(bIni) || isNaN(bRest) || isNaN(kTotal) || isNaN(tA)) {
+            alert("Por favor, preencha todos os campos!");
+            return;
+        }
+
+        if (bRest >= bIni) {
+            alert("A bateria restante não pode ser maior ou igual à inicial!");
+            return;
+        }
+
+        if (tA <= 0) {
+            alert("O valor do Trip A deve ser maior que zero!");
+            return;
+        }
+
+        var batGasta = bIni - bRest;
+        var kwhGasto = (batGasta / 100) * 38; 
+        var mediaKwh = (kwhGasto * 100) / tA; // Padrão kWh/100km
+        var custoDinheiro = kwhGasto * kwhPreco;
+        var custoPorKm = custoDinheiro / tA;
+
+        var d = new Date();
+        var dataTxt = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+
+        var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
+
+        var registro = {
+            data: dataTxt,
+            bIni: bIni,
+            bRest: bRest,
+            kTotal: kTotal,
+            tA: tA,
+            batGasta: batGasta,
+            mediaKwh: mediaKwh,
+            custoDinheiro: custoDinheiro,
+            custoPorKm: custoPorKm
+        };
+
+        lista.unshift(registro);
+        localStorage.setItem('byd_dados_v3', JSON.stringify(lista));
+        
+        // Limpar campos
+        document.getElementById('bRest').value = '';
+        document.getElementById('tA').value = '';
+        document.getElementById('bIni').value = '100';
+        document.getElementById('kTotal').value = '';
+
+        desenharTabela();
+    }
+
+    function desenharTabela() {
+        var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
+        var corpo = document.getElementById('linhasTabela');
+        corpo.innerHTML = '';
+
+        for (var i = 0; i < lista.length; i++) {
+            var item = lista[i];
+
+            var mKwh = item.mediaKwh ? item.mediaKwh.toFixed(2) : "0.00";
+            var cDin = item.custoDinheiro ? item.custoDinheiro.toFixed(2) : "0.00";
+            var cKm = item.custoPorKm ? item.custoPorKm.toFixed(2) : "0.00";
+
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + item.data + '</td>' +
+                           '<td>' + item.kTotal + ' km</td>' +
+                           '<td>' + item.tA.toFixed(1) + ' km</td>' +
+                           '<td>' + item.batGasta + '%</td>' +
+                           '<td class="txt-blue">' + mKwh + ' kWh/100km</td>' +
+                           '<td>R$ ' + cDin + '</td>' +
+                           '<td class="txt-green">R$ ' + cKm + '</td>';
+            corpo.appendChild(tr);
+        }
+    }
+</script>
+</body>
+</html>
