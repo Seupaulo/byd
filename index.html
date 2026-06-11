@@ -2,75 +2,119 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Histórico Dolphin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Consumo Dolphin</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Consumo%20Dolphin%22,%22short_name%22:%22Dolphin%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#121212%22,%22theme_color%22:%22#00aa6c%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2087/2087628.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; padding: 10px; margin: 0; }
-        .box { background-color: #1e1e1e; padding: 15px; border-radius: 8px; max-width: 500px; margin: 0 auto 15px auto; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-        h3 { margin-top: 0; text-align: center; color: #00aa6c; font-size: 16px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-        label { display: block; margin-bottom: 4px; font-size: 12px; color: #bbb; }
-        input { width: 100%; padding: 8px; border-radius: 4px; border: none; box-sizing: border-box; font-size: 14px; background-color: #333; color: #fff; }
-        button { width: 100%; padding: 10px; background-color: #00875a; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: bold; margin-top: 5px; }
-        .table-scroll { max-width: 800px; margin: 0 auto; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; min-width: 650px; }
-        th, td { padding: 8px; text-align: center; border-bottom: 1px solid #333; font-size: 12px; }
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+            background-color: #121212; 
+            color: #ffffff; 
+            box-sizing: border-box;
+        }
+        .wrapper { padding: 15px; max-width: 100%; box-sizing: border-box; }
+        .box { background-color: #1e1e1e; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        h3 { margin-top: 0; text-align: center; color: #00aa6c; font-size: 22px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-size: 16px; color: #bbb; }
+        input { width: 100%; padding: 12px; border-radius: 6px; border: none; box-sizing: border-box; font-size: 18px; background-color: #333; color: #fff; }
+        button { width: 100%; padding: 15px; background-color: #00875a; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .table-scroll { width: 100%; overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; min-width: 700px; }
+        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #333; font-size: 16px; }
         th { background-color: #2d2d2d; color: #00aa6c; }
         .txt-blue { color: #57b9ff; font-weight: bold; }
         .txt-green { color: #00ffa2; font-weight: bold; }
+        
+        /* Banner de instalação para multimídias teimosas */
+        #pwa-btn { display: none; background-color: #0070f3; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
-<!-- CONFIG -->
-<div class="box" style="background-color: #252525;">
-    <label>Preço do kWh da sua Distribuidora (R$):</label>
-    <input type="number" id="vKwh" step="0.01" placeholder="Ex: 0.85" oninput="gravarConfig()">
-</div>
+<div class="wrapper">
+    <button id="pwa-btn">📲 Adicionar Aplicativo à Tela do Carro</button>
 
-<!-- FORMULÁRIO -->
-<div class="box">
-    <h3>🔋 Nova Recarga</h3>
-    <div class="grid">
-        <div>
-            <label>% Inicial da Carga:</label>
-            <input type="number" id="bIni" value="100">
-        </div>
-        <div>
-            <label>% Restante Atual:</label>
-            <input type="number" id="bRest" placeholder="Ex: 20">
-        </div>
-        <div>
-            <label>KM Total do Carro:</label>
-            <input type="number" id="kTotal" placeholder="Ex: 5200">
-        </div>
-        <div>
-            <label>Valor do Trip A (km):</label>
-            <input type="number" id="tA" step="0.1" placeholder="Ex: 285.4">
-        </div>
+    <div class="box" style="background-color: #252525;">
+        <label>Preço do kWh da sua Distribuidora (R$):</label>
+        <input type="number" id="vKwh" step="0.01" placeholder="Ex: 0.85" oninput="gravarConfig()">
     </div>
-    <button onclick="adicionarDados()">Calcular e Salvar</button>
-</div>
 
-<!-- TABELA -->
-<div class="table-scroll">
-    <table id="minhaTabela">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Odo. Total</th>
-                <th>Trip A</th>
-                <th>Bat. Gasta</th>
-                <th>Consumo</th>
-                <th>Custo</th>
-                <th>R$ / KM</th>
-            </tr>
-        </thead>
-        <tbody id="linhasTabela"></tbody>
-    </table>
+    <div class="box">
+        <h3>🔋 Nova Recarga</h3>
+        <div class="grid">
+            <div>
+                <label>% Inicial da Carga:</label>
+                <input type="number" id="bIni" value="100">
+            </div>
+            <div>
+                <label>% Restante Atual:</label>
+                <input type="number" id="bRest" placeholder="Ex: 20">
+            </div>
+            <div>
+                <label>KM Total do Carro:</label>
+                <input type="number" id="kTotal" placeholder="Ex: 5200">
+            </div>
+            <div>
+                <label>Valor do Trip A (km):</label>
+                <input type="number" id="tA" step="0.1" placeholder="Ex: 285.4">
+            </div>
+        </div>
+        <button onclick="adicionarDados()">Calcular e Salvar</button>
+    </div>
+
+    <div class="table-scroll">
+        <table id="minhaTabela">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Odo. Total</th>
+                    <th>Trip A</th>
+                    <th>Bat. Gasta</th>
+                    <th>Consumo</th>
+                    <th>Custo</th>
+                    <th>R$ / KM</th>
+                </tr>
+            </thead>
+            <tbody id="linhasTabela"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
+    // Ativação do Service Worker via Data URI para funcionar direto no GitHub Pages
+    if ('serviceWorker' in navigator) {
+        const swCode = `self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });`;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+
+    // Captura o evento de instalação do Android da BYD
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('pwa-btn').style.display = 'block';
+    });
+
+    document.getElementById('pwa-btn').addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('pwa-btn').style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+
     window.onload = function() {
         var kwh = localStorage.getItem('byd_kwh');
         if (kwh) { document.getElementById('vKwh').value = kwh; }
@@ -107,7 +151,7 @@
 
         var batGasta = bIni - bRest;
         var kwhGasto = (batGasta / 100) * 38; 
-        var mediaKwh = (kwhGasto * 100) / tA; // Padrão kWh/100km
+        var mediaKwh = (kwhGasto * 100) / tA; 
         var custoDinheiro = kwhGasto * kwhPreco;
         var custoPorKm = custoDinheiro / tA;
 
@@ -131,7 +175,6 @@
         lista.unshift(registro);
         localStorage.setItem('byd_dados_v3', JSON.stringify(lista));
         
-        // Limpar campos
         document.getElementById('bRest').value = '';
         document.getElementById('tA').value = '';
         document.getElementById('bIni').value = '100';
@@ -147,7 +190,6 @@
 
         for (var i = 0; i < lista.length; i++) {
             var item = lista[i];
-
             var mKwh = item.mediaKwh ? item.mediaKwh.toFixed(2) : "0.00";
             var cDin = item.custoDinheiro ? item.custoDinheiro.toFixed(2) : "0.00";
             var cKm = item.custoPorKm ? item.custoPorKm.toFixed(2) : "0.00";
