@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Consumo Dolphin</title>
     
+    <!-- Configurações PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Consumo%20Dolphin%22,%22short_name%22:%22Dolphin%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#121212%22,%22theme_color%22:%22#00aa6c%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2087/2087628.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
@@ -33,14 +34,25 @@
         .txt-blue { color: #57b9ff; font-weight: bold; }
         .txt-green { color: #00ffa2; font-weight: bold; }
         
-        /* Banner de instalação para multimídias teimosas */
-        #pwa-btn { display: none; background-color: #0070f3; margin-bottom: 15px; }
+        /* Botão de instalação destacado */
+        #pwa-btn { 
+            display: none; 
+            background-color: #0070f3; 
+            margin-bottom: 20px; 
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <button id="pwa-btn">📲 Adicionar Aplicativo à Tela do Carro</button>
+    <!-- Botão de instalação PWA -->
+    <button id="pwa-btn" onclick="instalarPWA()">📲 Adicionar Aplicativo à Tela Inicial</button>
 
     <div class="box" style="background-color: #252525;">
         <label>Preço do kWh da sua Distribuidora (R$):</label>
@@ -89,22 +101,22 @@
 </div>
 
 <script>
-    // Ativação do Service Worker via Data URI para funcionar direto no GitHub Pages
+    // Registro do Service Worker apontando para o arquivo correto
     if ('serviceWorker' in navigator) {
-        const swCode = `self.addEventListener('fetch', function(e) { e.respondWith(fetch(e.request)); });`;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob));
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log("Service Worker Registrado!"))
+            .catch(err => console.log("Erro no SW:", err));
     }
 
-    // Captura o evento de instalação do Android da BYD
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
+        // Mostra o botão azul de instalação
         document.getElementById('pwa-btn').style.display = 'block';
     });
 
-    document.getElementById('pwa-btn').addEventListener('click', async () => {
+    async function instalarPWA() {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
@@ -113,7 +125,7 @@
             }
             deferredPrompt = null;
         }
-    });
+    }
 
     window.onload = function() {
         var kwh = localStorage.getItem('byd_kwh');
@@ -182,6 +194,10 @@
 
         desenharTabela();
     }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) { desenharTabela(); }
+    });
 
     function desenharTabela() {
         var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
