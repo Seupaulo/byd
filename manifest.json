@@ -1,0 +1,18 @@
+{
+  "name": "Consumo Dolphin Mini",
+  "short_name": "Dolphin",
+  "description": "Histórico de Recargas e Consumo do BYD Dolphin Mini",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#00aa6c",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2087/2087628.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
