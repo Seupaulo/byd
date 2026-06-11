@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Consumo Dolphin</title>
     
-    <!-- Configurações PWA -->
+    <!-- Link para o Manifesto Externo Completo -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#00aa6c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Consumo%20Dolphin%22,%22short_name%22:%22Dolphin%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22#121212%22,%22theme_color%22:%22#00aa6c%22,%22icons%22:[{%22src%22:%22https://cdn-icons-png.flaticon.com/512/2087/2087628.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
 
     <style>
         html, body { 
@@ -34,25 +35,35 @@
         .txt-blue { color: #57b9ff; font-weight: bold; }
         .txt-green { color: #00ffa2; font-weight: bold; }
         
-        /* Botão de instalação destacado */
+        /* Ajuste do botão de instalação */
         #pwa-btn { 
             display: none; 
             background-color: #0070f3; 
             margin-bottom: 20px; 
-            animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+        
+        /* Ajuda visual caso o navegador bloqueie o botão */
+        .pwa-help {
+            background-color: #2b2b1a;
+            border: 1px solid #ffcc00;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 15px;
+            color: #ffeb9c;
         }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- Botão de instalação PWA -->
-    <button id="pwa-btn" onclick="instalarPWA()">📲 Adicionar Aplicativo à Tela Inicial</button>
+    <!-- Instrução alternativa se o carro ocultar o botão automático -->
+    <div class="pwa-help">
+        💡 <b>Para salvar na tela do carro/PC:</b> Se o botão azul abaixo não aparecer, clique nos <b>três pontinhos ⋮</b> ou no ícone de <b>opções</b> do próprio navegador do carro e procure por <b>"Adicionar à tela de início"</b>, <b>"Instalar"</b> ou abra a estrela de favoritos.
+    </div>
+
+    <!-- Botão de instalação PWA (Corrigido) -->
+    <button id="pwa-btn" onclick="instalarPWA()">📲 Instalar Aplicativo na Tela Inicial</button>
 
     <div class="box" style="background-color: #252525;">
         <label>Preço do kWh da sua Distribuidora (R$):</label>
@@ -101,18 +112,19 @@
 </div>
 
 <script>
-    // Registro do Service Worker apontando para o arquivo correto
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-            .then(() => console.log("Service Worker Registrado!"))
-            .catch(err => console.log("Erro no SW:", err));
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log("Service Worker ativo!"))
+                .catch(err => console.log("Erro SW:", err));
+        });
     }
 
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // Mostra o botão azul de instalação
+        // CORRIGIDO: Removido o ".style" duplicado
         document.getElementById('pwa-btn').style.display = 'block';
     });
 
@@ -194,10 +206,6 @@
 
         desenharTabela();
     }
-
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) { desenharTabela(); }
-    });
 
     function desenharTabela() {
         var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
