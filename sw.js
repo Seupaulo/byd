@@ -1,3 +1,22 @@
-self.addEventListener('fetch', function(event) {
-    event.respondWith(fetch(event.request));
+const CACHE_NAME = 'byd-v4';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
+];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
+  );
 });
