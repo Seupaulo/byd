@@ -29,11 +29,22 @@
             font-size: 26px;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 25px;
+            margin-bottom: 5px;
             text-align: left;
             border-left: 5px solid #00ff9d;
             padding-left: 12px;
             letter-spacing: 0.5px;
+        }
+
+        /* Indicador de Versão solicitado pelo Usuário */
+        .version-tag {
+            font-size: 13px;
+            font-weight: 600;
+            color: #a0aec0;
+            margin-bottom: 25px;
+            padding-left: 17px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Layout em duas colunas */
@@ -319,6 +330,7 @@
 <div class="wrapper">
     
     <div class="main-title">Controle de Carregamento da Bateria</div>
+    <div class="version-tag">Versão V2.0</div>
     
     <div class="dashboard-grid">
         
@@ -346,8 +358,8 @@
             <div class="card-header-actions">
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
-                    <button class="btn-ha btn-cloud-down" onclick="dispararSincronismoNuvem()">📥 Sincronizar com Nuvem</button>
-                    <button class="btn-ha" onclick="mostrarModalAlerta('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
+                    <button class="btn-cloud-down" onclick="dispararSincronismoNuvem()">📥 Sincronizar com Nuvem</button>
+                    <button class="btn-ha" onclick="abrirModalAlerta('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
             
@@ -470,7 +482,7 @@
         <div id="customModalTitle" class="modal-title">Título</div>
         <div id="customModalText" class="modal-text">Conteúdo do aviso.</div>
         <div id="customModalButtons" class="modal-buttons">
-            <button id="modalBtnCancel" class="modal-btn btn-cancel" onclick="fecharModal()">Cancelar</button>
+            <button id="modalBtnCancel" class="modal-btn btn-cancel" onclick="fecharJanelaModal()">Cancelar</button>
             <button id="modalBtnConfirm" class="modal-btn btn-confirm">Confirmar</button>
         </div>
     </div>
@@ -480,8 +492,8 @@
     // VARIÁVEL DE INTERRUPÇÃO GLOBAL PARA REDIRECIONAMENTO DE CLIQUES
     let acaoPendenteAoConfirmar = null;
 
-    // MOTOR DE POP-UPS CUSTOMIZADOS BLINDADO CONTRA TRAVAMENTO DE ESCOPO
-    function mostrarModalAlerta(titulo, texto) {
+    // MOTOR DE POP-UPS TOTALMENTE RENOMEADO PARA FORÇAR ATUALIZAÇÃO DE ESCOPO NO NAVEGADOR DO CARRO
+    function abrirModalAlerta(titulo, texto) {
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
         document.getElementById('modalBtnCancel').style.display = 'none';
@@ -489,13 +501,13 @@
         const btnConfirm = document.getElementById('modalBtnConfirm');
         btnConfirm.innerText = "Entendido";
         btnConfirm.onclick = function() {
-            fecharModal();
+            fecharJanelaModal();
         };
         
         document.getElementById('customModalOverlay').classList.add('active');
     }
 
-    function mostrarModalConfirmacao(titulo, texto, nomeAcaoGlobal) {
+    function abrirModalConfirmacao(titulo, texto, nomeAcaoGlobal) {
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
         document.getElementById('modalBtnCancel').style.display = 'inline-block';
@@ -506,7 +518,7 @@
         acaoPendenteAoConfirmar = nomeAcaoGlobal;
         
         btnConfirm.onclick = function() {
-            fecharModal();
+            fecharJanelaModal();
             if (acaoPendenteAoConfirmar === 'sincronizar') {
                 executarSincronismoFisico();
             } else if (acaoPendenteAoConfirmar === 'zerar') {
@@ -517,27 +529,25 @@
         document.getElementById('customModalOverlay').classList.add('active');
     }
 
-    function fecharModal() {
+    function fecharJanelaModal() {
         document.getElementById('customModalOverlay').classList.remove('active');
         acaoPendenteAoConfirmar = null;
     }
 
     // GATILHOS EXECUTADOS PELOS BOTÕES DO FORMULÁRIO
     function dispararSincronismoNuvem() {
-        mostrarModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', 'sincronizar');
+        abrirModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', 'sincronizar');
     }
 
     function dispararZerarHistorico() {
-        mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', 'zerar');
+        abrirModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', 'zerar');
     }
 
-    // BOMBA DE LIMPEZA CONTRA SERVICE WORKERS PRESOS
+    // PURGAÇÃO DE SERVICE WORKERS ANTERIORES
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(function(registrations) {
             for (let registration of registrations) {
-                registration.unregister().then(function(success) {
-                    if(success) { console.log('Worker antigo destruído.'); }
-                });
+                registration.unregister();
             }
         });
     }
@@ -576,16 +586,15 @@
         .catch(err => console.error("Erro no envio em background:", err));
     }
 
-    // EXCLUSÃO E SINCRO MUDADOS PARA EXECUÇÃO ISOLADA DO DOM (EVITA ERRO DE ESCOPO)
     function executarLimpezaFisica() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
         setTimeout(function() {
-            mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
+            abrirModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
         }, 150);
     }
 
-    function executarSincronismoFisico() {
+    function ejecutarSincronismoFisico() {
         const btn = document.querySelector('.btn-cloud-down');
         btn.innerText = "📥 Sincronizando...";
         btn.disabled = true;
@@ -598,19 +607,19 @@
         .then(res => res.json())
         .then(res => {
             if(res.status === "sucesso") {
-                localStorage.removeItem('byd_local_data_v5'); // Destrói o cache velho editado
-                localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados)); // Injeta a versão nova atualizada da nuvem
-                desenharInterface(); // Redesenha a tela imediatamente
+                localStorage.removeItem('byd_local_data_v5');
+                localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
+                desenharInterface();
                 setTimeout(function() {
-                    mostrarModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
+                    abrirModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
                 }, 150);
             } else {
-                mostrarModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
+                abrirModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
             }
         })
         .catch(err => {
             console.error(err);
-            mostrarModalAlerta("Erro", "Erro de rede ao conectar ao banco da nuvem.");
+            abrirModalAlerta("Erro", "Erro de rede ao conectar ao banco da nuvem.");
         })
         .finally(() => {
             btn.innerText = "📥 Sincronizar com Nuvem";
@@ -631,12 +640,12 @@
         var precoAplicado = (tipoCarga === 'AC') ? kwhPrecoAc : kwhPrecoDc;
 
         if (isNaN(kTotal) || isNaN(bIni) || isNaN(bRest)) {
-            mostrarModalAlerta("Atenção", "Por favor, preencha todos os campos antes de rodar o cálculo!");
+            abrirModalAlerta("Atenção", "Por favor, preencha todos os campos antes de rodar o cálculo!");
             return;
         }
 
         if (bRest < 0 || bRest > 100 || bIni < 0 || bIni > 100) {
-            mostrarModalAlerta("Valor Inválido", "Os valores de bateria devem estar estritamente entre 0% e 100%!");
+            abrirModalAlerta("Valor Inválido", "Os valores de bateria devem estar estritamente entre 0% e 100%!");
             return;
         }
 
@@ -645,11 +654,11 @@
 
         if (kTotal !== 0) {
             if (bRest >= bIni) {
-                mostrarModalAlerta("Erro de Lógica", "O valor restante da bateria deve ser menor que o valor total recarregado!");
+                abrirModalAlerta("Erro de Lógica", "O valor restante da bateria deve ser menor que o valor total recarregado!");
                 return;
             }
             if (listaOrdenadaValidacao.length > 0 && kTotal <= listaOrdenadaValidacao[0].kTotal) {
-                mostrarModalAlerta("Erro", "O odômetro atual deve ser maior que o último registro (" + listaOrdenadaValidacao[0].kTotal + " km)!");
+                abrirModalAlerta("Erro", "O odômetro atual deve ser maior que o último registro (" + listaOrdenadaValidacao[0].kTotal + " km)!");
                 return;
             }
         }
@@ -688,7 +697,7 @@
 
         desenharInterface();
         setTimeout(function() {
-            mostrarModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
+            abrirModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
         }, 300);
     }
 
@@ -816,7 +825,7 @@
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
-    // SUA URL DO GOOGLE APPS SCRIPT PERFEITA NA LINHA 481 COMO SOLICITADO
+    // SUA URL DO GOOGLE APPS SCRIPT NA LINHA 482
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVxVo5PDuuXsSqFFcmGg9HNrrqzO5hUTj4bRpejWyONXeMfm9lb_TPDsmK9yZtKQeNog/exec";
 </script>
 </body>
