@@ -338,7 +338,7 @@
             </div>
             <div style="font-size: 13px; color: #a0aec0; margin-top: 25px; line-height: 1.5; border-top: 1px solid #242936; padding-top: 12px;">
                 ⚙️ Valores aplicados como base de custo para os cálculos automotivos.
-                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', acaoDeletarTudo)">Zerar Histórico do Aparelho</button>
+                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', window.acaoDeletarTudo)">Zerar Histórico do Aparelho</button>
             </div>
         </div>
 
@@ -507,7 +507,9 @@
         modalCallback = callbackSucesso;
         btnConfirm.onclick = function() {
             fecharModal();
-            if(modalCallback) modalCallback();
+            if(modalCallback) {
+                modalCallback();
+            }
         };
         
         document.getElementById('customModalOverlay').classList.add('active');
@@ -583,7 +585,9 @@
             if(res.status === "sucesso") {
                 localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
                 desenharInterface();
-                mostrarModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
+                setTimeout(function() {
+                    mostrarModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
+                }, 300);
             } else {
                 mostrarModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
             }
@@ -667,7 +671,9 @@
         document.getElementById('bIni').value = '';
 
         desenharInterface();
-        mostrarModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
+        setTimeout(function() {
+            mostrarModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
+        }, 300);
     }
 
     function converterParaDataObjeto(registro) {
@@ -790,11 +796,13 @@
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
- // FUNÇÃO DE EXCLUSÃO LOCAL AMARRADA DIRETAMENTE AO ESCOPO GLOBAL DO NAVEGADOR
+    // FUNÇÃO DE EXCLUSÃO LOCAL AMARRADA DIRETAMENTE AO ESCOPO GLOBAL
     window.acaoDeletarTudo = function() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
-        mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
+        setTimeout(function() {
+            mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
+        }, 100);
     };
 </script>
 </body>
