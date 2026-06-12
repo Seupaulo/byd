@@ -3,230 +3,585 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Consumo Dolphin</title>
-    
-    <!-- Link para o Manifesto Externo Completo -->
-    <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#00aa6c">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Controle de Carregamento da Bateria</title>
 
     <style>
+        /* Estilo Base - Tema Premium Dark / Cockpit */
         html, body { 
             height: 100%; 
             margin: 0; 
             padding: 0; 
-            font-family: Arial, sans-serif; 
-            background-color: #121212; 
-            color: #ffffff; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #0d0f12; 
+            color: #e3e6eb; 
             box-sizing: border-box;
         }
-        .wrapper { padding: 15px; max-width: 100%; box-sizing: border-box; }
-        .box { background-color: #1e1e1e; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-        h3 { margin-top: 0; text-align: center; color: #00aa6c; font-size: 22px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-size: 16px; color: #bbb; }
-        input { width: 100%; padding: 12px; border-radius: 6px; border: none; box-sizing: border-box; font-size: 18px; background-color: #333; color: #fff; }
-        button { width: 100%; padding: 15px; background-color: #00875a; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        .table-scroll { width: 100%; overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; background-color: #1e1e1e; min-width: 700px; }
-        th, td { padding: 12px 8px; text-align: center; border-bottom: 1px solid #333; font-size: 16px; }
-        th { background-color: #2d2d2d; color: #00aa6c; }
-        .txt-blue { color: #57b9ff; font-weight: bold; }
-        .txt-green { color: #00ffa2; font-weight: bold; }
         
-        /* Ajuste do botão de instalação */
-        #pwa-btn { 
-            display: none; 
-            background-color: #0070f3; 
-            margin-bottom: 20px; 
+        .wrapper { 
+            padding: 20px; 
+            max-width: 1400px; 
+            margin: 0 auto;
+            box-sizing: border-box; 
+        }
+
+        /* Título Principal do Aplicativo */
+        .main-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            text-align: left;
+            border-left: 5px solid #00ff9d;
+            padding-left: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Layout em duas colunas */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Containers de Conteúdo */
+        .card { 
+            background-color: #161920; 
+            padding: 22px; 
+            border-radius: 12px; 
+            border: 1px solid #242936;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4); 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         
-        /* Ajuda visual caso o navegador bloqueie o botão */
-        .pwa-help {
-            background-color: #2b2b1a;
-            border: 1px solid #ffcc00;
-            padding: 15px;
-            border-radius: 8px;
+        h3 { 
+            margin-top: 0; 
             margin-bottom: 20px;
-            font-size: 15px;
-            color: #ffeb9c;
+            text-align: left; 
+            color: #00ff9d; 
+            font-size: 18px; 
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #242936;
+            padding-bottom: 10px;
         }
+
+        /* Formulário */
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+            margin-bottom: 10px; 
+        }
+        
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+
+        label { 
+            margin-bottom: 10px; 
+            font-size: 15px; 
+            color: #cbd5e1; 
+            font-weight: 600;
+        }
+        
+        input[type="number"] { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 8px; 
+            border: 1px solid #2d3748; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background-color: #1f242e; 
+            color: #ffffff; 
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #00ff9d;
+        }
+
+        /* Bolinhas (Radio Buttons) */
+        .radio-container {
+            display: flex;
+            gap: 15px;
+            padding: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+
+        .radio-option input[type="radio"] {
+            accent-color: #00ff9d;
+            transform: scale(1.3);
+        }
+        
+        /* Botão Principal */
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(135deg, #00aa6c 0%, #00875a 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(0, 170, 108, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* HISTÓRICO E SEÇÕES DA PÁGINA */
+        .history-section {
+            margin-bottom: 35px;
+        }
+
+        .section-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ff9d;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ESTRUTURA DE FECHAMENTO MENSAL NO RODAPÉ */
+        .month-summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 992px) {
+            .month-summary-cards { grid-template-columns: 1fr; }
+        }
+
+        .summary-card {
+            background-color: #1c212c;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .summary-title {
+            font-size: 13px;
+            color: #a0aec0;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .summary-details {
+            font-size: 15px;
+            color: #ffffff;
+            border-top: 1px solid #2d3748;
+            padding-top: 10px;
+            margin-top: 2px;
+            line-height: 1.6;
+        }
+        
+        /* Tabela Estilizada */
+        .table-scroll { 
+            width: 100%; 
+            overflow-x: auto; 
+            background-color: #161920;
+            border-radius: 12px;
+            border: 1px solid #242936;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4); 
+        }
+        
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th, td { padding: 16px 12px; text-align: center; font-size: 14px; }
+        th { 
+            background-color: #1f242e; 
+            color: #a0aec0; 
+            font-weight: 600; 
+            border-bottom: 2px solid #242936;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        td { border-bottom: 1px solid #242936; color: #e2e8f0; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Badges e Cores */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-ac { background-color: #1e3a8a; color: #93c5fd; }
+        .badge-dc { background-color: #7c2d12; color: #ffedd5; }
+        .badge-eco { background-color: #064e3b; color: #6ee7b7; }
+        .badge-normal { background-color: #2d3748; color: #cbd5e1; }
+        .badge-sport { background-color: #7f1d1d; color: #fca5a5; }
+
+        .txt-blue { color: #38bdf8; font-weight: 600; }
+        .txt-green { color: #4ade80; font-weight: 600; }
+        .btn-del { background-color: #de350b; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 11px; margin-top: 5px;}
     </style>
 </head>
 <body>
 
 <div class="wrapper">
-    <!-- Instrução alternativa se o carro ocultar o botão automático -->
-    <div class="pwa-help">
-        💡 <b>Para salvar na tela do carro/PC:</b> Se o botão azul abaixo não aparecer, clique nos <b>três pontinhos ⋮</b> ou no ícone de <b>opções</b> do próprio navegador do carro e procure por <b>"Adicionar à tela de início"</b>, <b>"Instalar"</b> ou abra a estrela de favoritos.
-    </div>
-
-    <!-- Botão de instalação PWA (Corrigido) -->
-    <button id="pwa-btn" onclick="instalarPWA()">📲 Instalar Aplicativo na Tela Inicial</button>
-
-    <div class="box" style="background-color: #252525;">
-        <label>Preço do kWh da sua Distribuidora (R$):</label>
-        <input type="number" id="vKwh" step="0.01" placeholder="Ex: 0.85" oninput="gravarConfig()">
-    </div>
-
-    <div class="box">
-        <h3>🔋 Nova Recarga</h3>
-        <div class="grid">
+    
+    <!-- TÍTULO DE CONTROLE DE CARREGAMENTO -->
+    <div class="main-title">Controle de Carregamento da Bateria</div>
+    
+    <!-- GRID SUPERIOR: VALOR KWH + REGISTRO -->
+    <div class="dashboard-grid">
+        
+        <!-- COLUNA ESQUERDA: VALOR DO KWH -->
+        <div class="card" style="border-top: 4px solid #38bdf8;">
             <div>
-                <label>% Inicial da Carga:</label>
-                <input type="number" id="bIni" value="100">
+                <h3>⚡ Valor do KWH</h3>
+                
+                <div class="input-group">
+                    <label>Carga Lenta AC (R$):</label>
+                    <input type="number" id="vKwhAc" step="0.01" value="0.85" oninput="gravarConfig()">
+                </div>
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <label>Carga Rápida DC (R$):</label>
+                    <input type="number" id="vKwhDc" step="0.01" value="2.10" oninput="gravarConfig()">
+                </div>
             </div>
-            <div>
-                <label>% Restante Atual:</label>
-                <input type="number" id="bRest" placeholder="Ex: 20">
-            </div>
-            <div>
-                <label>KM Total do Carro:</label>
-                <input type="number" id="kTotal" placeholder="Ex: 5200">
-            </div>
-            <div>
-                <label>Valor do Trip A (km):</label>
-                <input type="number" id="tA" step="0.1" placeholder="Ex: 285.4">
+            <div style="font-size: 11px; color: #718096; margin-top: 25px; line-height: 1.4; border-top: 1px solid #242936; padding-top: 10px;">
+                ⚙️ Valores aplicados como base de custo para os cálculos automotivos.
+                <button class="btn-del" onclick="deletarTudo()">Zerar Histórico</button>
             </div>
         </div>
-        <button onclick="adicionarDados()">Calcular e Salvar</button>
+
+        <!-- COLUNA DIREITA: REGISTRO DA RECARGA -->
+        <div class="card" style="border-top: 4px solid #00ff9d;">
+            <h3>🔋 Novo Registro de Recarga</h3>
+            
+            <div class="form-grid">
+                <!-- Inputs Numéricos Reordenados -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="input-group">
+                        <label>Odômetro Total Atual (km):</label>
+                        <input type="number" id="kTotal" placeholder="Ex: 5200 (Use 0 para carro novo)">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Valor restante da bateria (%):</label>
+                        <input type="number" id="bRest" placeholder="Ex: 20">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Valor total recarregado (%):</label>
+                        <input type="number" id="bIni" placeholder="Ex: 100">
+                    </div>
+                </div>
+
+                <!-- Seletores por Bolinhas (Radio) -->
+                <div style="display: flex; flex-direction: column; gap: 15px; background-color: #1a1d24; padding: 15px; border-radius: 8px; border: 1px solid #242936; justify-content: center;">
+                    <div class="input-group">
+                        <label>Tipo de Carregamento:</label>
+                        <div class="radio-container">
+                            <label class="radio-option">
+                                <input type="radio" name="tipoCarga" value="AC" checked> Carga Lenta (AC)
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="tipoCarga" value="DC"> Carga Rápida (DC)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="border-top: 1px solid #2d3748; padding-top: 15px;">
+                        <label>Modo de Condução Utilizado:</label>
+                        <div class="radio-container">
+                            <label class="radio-option">
+                                <input type="radio" name="modoConducao" value="Eco"> Eco
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="modoConducao" value="Normal" checked> Normal
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="modoConducao" value="Sport"> Sport
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="adicionarDados()">Calcular e Salvar Localmente</button>
+        </div>
+
     </div>
 
-    <div class="table-scroll">
-        <table id="minhaTabela">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Odo. Total</th>
-                    <th>Trip A</th>
-                    <th>Bat. Gasta</th>
-                    <th>Consumo</th>
-                    <th>Custo</th>
-                    <th>R$ / KM</th>
-                </tr>
-            </thead>
-            <tbody id="linhasTabela"></tbody>
-        </table>
+    <!-- SEÇÃO CENTRAL: HISTÓRICO DE RECARGAS -->
+    <div class="history-section">
+        <div class="section-header">
+            📋 Histórico Geral de Recargas
+        </div>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Odômetro Geral</th>
+                        <th>Tipo Carga</th>
+                        <th>Modo Condução</th>
+                        <th>Bateria Gasta</th>
+                        <th>Consumo Médio</th>
+                        <th>Custo Total</th>
+                        <th>Custo por KM</th>
+                    </tr>
+                </thead>
+                <tbody id="linhasTabela"></tbody>
+            </table>
+        </div>
     </div>
+
+    <!-- SEÇÃO INFERIOR: FECHAMENTO CONSOLIDADO DO MÊS (RODAPÉ) -->
+    <div class="history-section" style="margin-top: 40px;">
+        <div class="section-header" id="tituloConsolidado">
+            📊 Fechamento Consolidado do Mês
+        </div>
+
+        <div class="month-summary-cards">
+            <!-- CARD AC -->
+            <div class="summary-card" style="border-top: 4px solid #38bdf8;">
+                <div class="summary-title">Consolidado AC (Lenta)</div>
+                <div class="summary-value" id="cardAcValor" style="color: #38bdf8;">R$ 0,00</div>
+                <div class="summary-details">
+                    Distância: <b id="cardAcKm">0,0 km</b><br>
+                    Custo por KM: <b id="cardAcCustoKm">R$ 0,00 / km</b>
+                </div>
+            </div>
+            
+            <!-- CARD DC -->
+            <div class="summary-card" style="border-top: 4px solid #ff7849;">
+                <div class="summary-title">Consolidado DC (Rápida)</div>
+                <div class="summary-value" id="cardDcValor" style="color: #ff7849;">R$ 0,00</div>
+                <div class="summary-details">
+                    Distância: <b id="cardDcKm">0,0 km</b><br>
+                    Custo por KM: <b id="cardDcCustoKm">R$ 0,00 / km</b>
+                </div>
+            </div>
+            
+            <!-- CARD TOTAL MÊS -->
+            <div class="summary-card" style="border-top: 4px solid #00ff9d;">
+                <div class="summary-title">Distância Rodada (Total Mês)</div>
+                <div class="summary-value" id="cardTotalKm" style="color: #00ff9d;">0,0 km</div>
+                <div class="summary-details">
+                    Gasto Geral: <b id="cardTotalGasto">R$ 0,00</b><br>
+                    Média por KM: <b id="cardTotalCustoKm">R$ 0,00 / km</b>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(() => console.log("Service Worker ativo!"))
-                .catch(err => console.log("Erro SW:", err));
-        });
-    }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // CORRIGIDO: Removido o ".style" duplicado
-        document.getElementById('pwa-btn').style.display = 'block';
-    });
-
-    async function instalarPWA() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                document.getElementById('pwa-btn').style.display = 'none';
-            }
-            deferredPrompt = null;
-        }
-    }
-
     window.onload = function() {
-        var kwh = localStorage.getItem('byd_kwh');
-        if (kwh) { document.getElementById('vKwh').value = kwh; }
-        desenharTabela();
+        var ac = localStorage.getItem('byd_local_ac_v5');
+        var dc = localStorage.getItem('byd_local_dc_v5');
+        if (ac) document.getElementById('vKwhAc').value = ac;
+        if (dc) document.getElementById('vKwhDc').value = dc;
+        
+        desenharInterface();
     };
 
     function gravarConfig() {
-        var val = document.getElementById('vKwh').value;
-        localStorage.setItem('byd_kwh', val);
-        desenharTabela();
+        localStorage.setItem('byd_local_ac_v5', document.getElementById('vKwhAc').value);
+        localStorage.setItem('byd_local_dc_v5', document.getElementById('vKwhDc').value);
+        desenharInterface();
     }
 
     function adicionarDados() {
+        var kTotal = parseFloat(document.getElementById('kTotal').value);
         var bIni = parseFloat(document.getElementById('bIni').value);
         var bRest = parseFloat(document.getElementById('bRest').value);
-        var kTotal = parseFloat(document.getElementById('kTotal').value);
-        var tA = parseFloat(document.getElementById('tA').value);
-        var kwhPreco = parseFloat(localStorage.getItem('byd_kwh')) || 0;
+        
+        var tipoCarga = document.querySelector('input[name="tipoCarga"]:checked').value;
+        var modoConducao = document.querySelector('input[name="modoConducao"]:checked').value;
+        
+        var kwhPrecoAc = parseFloat(localStorage.getItem('byd_local_ac_v5')) || 0.85;
+        var kwhPrecoDc = parseFloat(localStorage.getItem('byd_local_dc_v5')) || 2.10;
+        var precoAplicado = (tipoCarga === 'AC') ? kwhPrecoAc : kwhPrecoDc;
 
-        if (isNaN(bIni) || isNaN(bRest) || isNaN(kTotal) || isNaN(tA)) {
-            alert("Por favor, preencha todos os campos!");
+        if (isNaN(kTotal) || isNaN(bIni) || isNaN(bRest)) {
+            alert("Por favor, preencha todos os campos antes de rodar o cálculo!");
             return;
         }
 
-        if (bRest >= bIni) {
-            alert("A bateria restante não pode ser maior ou igual à inicial!");
-            return;
+        var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
+
+        if (kTotal !== 0) {
+            if (bRest >= bIni) {
+                alert("O valor restante da bateria deve ser menor que o valor total recarregado!");
+                return;
+            }
+            if (lista.length > 0 && kTotal <= lista[0].kTotal) {
+                alert("O odômetro atual deve ser maior que o último registro (" + lista[0].kTotal + " km)!");
+                return;
+            }
         }
 
-        if (tA <= 0) {
-            alert("O valor do Trip A deve ser maior que zero!");
-            return;
-        }
-
-        var batGasta = bIni - bRest;
-        var kwhGasto = (batGasta / 100) * 38; 
-        var mediaKwh = (kwhGasto * 100) / tA; 
-        var custoDinheiro = kwhGasto * kwhPreco;
-        var custoPorKm = custoDinheiro / tA;
+        var batRecarregadaNoMomento = bIni - bRest;
+        if (batRecarregadaNoMomento < 0) batRecarregadaNoMomento = 0;
+        var kwhGastoNaRecarga = (batRecarregadaNoMomento / 100) * 38;
+        var custoDinheiroRecarga = kwhGastoNaRecarga * precoAplicado;
 
         var d = new Date();
         var dataTxt = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-
-        var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
+        var mesChave = (d.getMonth() + 1) + '_' + d.getFullYear();
 
         var registro = {
             data: dataTxt,
+            mesAno: mesChave,
+            kTotal: kTotal,
             bIni: bIni,
             bRest: bRest,
-            kTotal: kTotal,
-            tA: tA,
-            batGasta: batGasta,
-            mediaKwh: mediaKwh,
-            custoDinheiro: custoDinheiro,
-            custoPorKm: custoPorKm
+            tipoCarga: tipoCarga,
+            modoConducao: modoConducao,
+            custoDinheiro: custoDinheiroRecarga
         };
 
-        lista.unshift(registro);
-        localStorage.setItem('byd_dados_v3', JSON.stringify(lista));
-        
-        document.getElementById('bRest').value = '';
-        document.getElementById('tA').value = '';
-        document.getElementById('bIni').value = '100';
-        document.getElementById('kTotal').value = '';
+        lista.unshift(registro); 
+        localStorage.setItem('byd_local_data_v5', JSON.stringify(lista));
 
-        desenharTabela();
+        // Limpar os campos numéricos por completo para a próxima inserção
+        document.getElementById('bRest').value = '';
+        document.getElementById('kTotal').value = '';
+        document.getElementById('bIni').value = '';
+
+        desenharInterface();
     }
 
-    function desenharTabela() {
-        var lista = JSON.parse(localStorage.getItem('byd_dados_v3')) || [];
+    function desenharInterface() {
+        var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
         var corpo = document.getElementById('linhasTabela');
         corpo.innerHTML = '';
 
-        for (var i = 0; i < lista.length; i++) {
+        var dAtual = new Date();
+        var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
+        var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
+
+        var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
+
+        for (var i = lista.length - 1; i >= 0; i--) {
             var item = lista[i];
-            var mKwh = item.mediaKwh ? item.mediaKwh.toFixed(2) : "0.00";
-            var cDin = item.custoDinheiro ? item.custoDinheiro.toFixed(2) : "0.00";
-            var cKm = item.custoPorKm ? item.custoPorKm.toFixed(2) : "0.00";
+            var itemAnterior = lista[i + 1];
+
+            var deltaKm = 0;
+            var batGastaNaViagem = 0;
+            var mediaKwh = 0;
+            var custoPorKm = 0;
+
+            if (itemAnterior) {
+                deltaKm = item.kTotal - itemAnterior.kTotal;
+                batGastaNaViagem = itemAnterior.bIni - item.bRest;
+                
+                if (deltaKm > 0 && batGastaNaViagem > 0) {
+                    var kwhConsumidoNaViagem = (batGastaNaViagem / 100) * 38;
+                    mediaKwh = (kwhConsumidoNaViagem * 100) / deltaKm;
+                    custoPorKm = item.custoDinheiro / deltaKm;
+                }
+            }
+
+            item.exibirDelta = deltaKm;
+            item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
+            item.exibirMedia = mediaKwh;
+            item.exibirCustoKm = custoPorKm;
+
+            if (item.mesAno === mesAtualChave && deltaKm > 0) {
+                if (item.tipoCarga === 'AC') {
+                    resumo.acGasto += item.custoDinheiro;
+                    resumo.acKm += deltaKm;
+                } else {
+                    resumo.dcGasto += item.custoDinheiro;
+                    resumo.dcKm += deltaKm;
+                }
+                resumo.totalGasto += item.custoDinheiro;
+                resumo.totalKm += deltaKm;
+            }
+        }
+
+        for (var j = 0; j < lista.length; j++) {
+            var r = lista[j];
+            
+            var txtKmGeral = r.kTotal + " km";
+            var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
+            var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
+            var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
+            var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
+
+            var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
+            var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
 
             var tr = document.createElement('tr');
-            tr.innerHTML = '<td>' + item.data + '</td>' +
-                           '<td>' + item.kTotal + ' km</td>' +
-                           '<td>' + item.tA.toFixed(1) + ' km</td>' +
-                           '<td>' + item.batGasta + '%</td>' +
-                           '<td class="txt-blue">' + mKwh + ' kWh/100km</td>' +
-                           '<td>R$ ' + cDin + '</td>' +
-                           '<td class="txt-green">R$ ' + cKm + '</td>';
+            tr.innerHTML = '<td>' + r.data + '</td>' +
+                           '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
+                           '<td>' + badgeCarga + '</td>' +
+                           '<td>' + badgeModo + '</td>' +
+                           '<td>' + txtBatGasta + '</td>' +
+                           '<td class="txt-blue">' + txtMedia + '</td>' +
+                           '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
+                           '<td class="txt-green">' + txtCustoKm + '</td>';
             corpo.appendChild(tr);
+        }
+
+        document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
+        document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
+        document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
+
+        document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
+        document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
+        document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
+
+        document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
+        document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
+        document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
+    }
+
+    function deletarTudo() {
+        if (confirm("Deseja apagar todo o histórico local de recargas do navegador?")) {
+            localStorage.removeItem('byd_local_data_v5');
+            desenharInterface();
         }
     }
 </script>
