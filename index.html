@@ -359,7 +359,7 @@
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
                     <button class="btn-cloud-down" onclick="dispararSincronismoNuvem()">📥 Sincronizar com Nuvem</button>
-                    <button class="btn-ha" onclick="abrirModalAlerta('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
+                    <button class="btn-ha" onclick="abrirModalAlertaFixo('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
             
@@ -483,79 +483,55 @@
         <div id="customModalText" class="modal-text">Conteúdo do aviso.</div>
         <div id="customModalButtons" class="modal-buttons">
             <button id="modalBtnCancel" class="modal-btn btn-cancel" onclick="fecharJanelaModal()">Cancelar</button>
-            <button id="modalBtnConfirm" class="modal-btn btn-confirm">Confirmar</button>
+            <button id="modalBtnConfirm" class="modal-btn btn-confirm" onclick="clicouConfirmar()">Confirmar</button>
         </div>
     </div>
 </div>
 
 <script>
-    // VARIÁVEL DE INTERRUPÇÃO GLOBAL PARA REDIRECIONAMENTO DE CLIQUES
-    let acaoPendenteAoConfirmar = null;
+    // ESTADO FIXO DE CONTROLE (MÁQUINA DE ESTADOS - REJEITA ERRO DE ESCOPO DINÂMICO)
+    let tipoModalAtivo = "alerta"; // alerta, sincronizar, zerar
 
-    // MOTOR DE POP-UPS TOTALMENTE RENOMEADO PARA FORÇAR ATUALIZAÇÃO DE ESCOPO NO NAVEGADOR DO CARRO
-    function abrirModalAlerta(titulo, texto) {
+    function abrirModalAlertaFixo(titulo, texto) {
+        tipoModalAtivo = "alerta";
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
         document.getElementById('modalBtnCancel').style.display = 'none';
-        
-        const btnConfirm = document.getElementById('modalBtnConfirm');
-        btnConfirm.innerText = "Entendido";
-        btnConfirm.onclick = function() {
-            fecharJanelaModal();
-        };
-        
+        document.getElementById('modalBtnConfirm').innerText = "Entendido";
         document.getElementById('customModalOverlay').classList.add('active');
     }
 
-    function abrirModalConfirmacao(titulo, texto, nomeAcaoGlobal) {
+    function abrirModalConfirmacaoFixo(titulo, texto, tipoAcao) {
+        tipoModalAtivo = tipoAcao; // "sincronizar" ou "zerar"
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
         document.getElementById('modalBtnCancel').style.display = 'inline-block';
-        
-        const btnConfirm = document.getElementById('modalBtnConfirm');
-        btnConfirm.innerText = "Confirmar";
-        
-        acaoPendenteAoConfirmar = nomeAcaoGlobal;
-        
-        btnConfirm.onclick = function() {
-            fecharJanelaModal();
-            if (acaoPendenteAoConfirmar === 'sincronizar') {
-                executarSincronismoFisico();
-            } else if (acaoPendenteAoConfirmar === 'zerar') {
-                executarLimpezaFisica();
-            }
-        };
-        
+        document.getElementById('modalBtnConfirm').innerText = "Confirmar";
         document.getElementById('customModalOverlay').classList.add('active');
     }
 
     function fecharJanelaModal() {
         document.getElementById('customModalOverlay').classList.remove('active');
-        acaoPendenteAoConfirmar = null;
     }
 
-    // GATILHOS EXECUTADOS PELOS BOTÕES DO FORMULÁRIO
+    // FUNÇÃO DE CLIQUE TOTALMENTE ESTÁTICA (O NAVEGADOR DO CARRO ADORA ISSO)
+    function clicouConfirmar() {
+        fecharJanelaModal();
+        
+        if (tipoModalAtivo === "sincronizar") {
+            executarSincronismoFisico();
+        } else if (tipoModalAtivo === "zerar") {
+            executarLimpezaFisica();
+        }
+        // Se for "alerta", apenas fecha (já fechou acima)
+    }
+
     function dispararSincronismoNuvem() {
-        abrirModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', 'sincronizar');
+        abrirModalConfirmacaoFixo('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', 'sincronizar');
     }
 
     function dispararZerarHistorico() {
-        abrirModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', 'zerar');
-    }
-
-    // PURGAÇÃO DE SERVICE WORKERS ANTERIORES
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for (let registration of registrations) {
-                registration.unregister();
-            }
-        });
-    }
-
-    if ('caches' in window) {
-        caches.keys().then(function(names) {
-            for (let name of names) { caches.delete(name); }
-        });
+        abrirModalConfirmacaoFixo('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', 'zerar');
     }
 
     window.onload = function() {
@@ -590,7 +566,7 @@
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
         setTimeout(function() {
-            abrirModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
+            abrirModalAlertaFixo("Sucesso", "O histórico local deste aparelho foi zerado.");
         }, 150);
     }
 
@@ -611,15 +587,15 @@
                 localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
                 desenharInterface();
                 setTimeout(function() {
-                    abrirModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
+                    abrirModalAlertaFixo("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
                 }, 150);
             } else {
-                abrirModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
+                abrirModalAlertaFixo("Erro", "Erro ao ler dados remotos: " + res.mensagem);
             }
         })
         .catch(err => {
             console.error(err);
-            abrirModalAlerta("Erro", "Erro de rede ao conectar ao banco da nuvem.");
+            abrirModalAlertaFixo("Erro", "Erro de rede ao conectar ao banco da nuvem.");
         })
         .finally(() => {
             btn.innerText = "📥 Sincronizar com Nuvem";
@@ -640,12 +616,12 @@
         var precoAplicado = (tipoCarga === 'AC') ? kwhPrecoAc : kwhPrecoDc;
 
         if (isNaN(kTotal) || isNaN(bIni) || isNaN(bRest)) {
-            abrirModalAlerta("Atenção", "Por favor, preencha todos os campos antes de rodar o cálculo!");
+            abrirModalAlertaFixo("Atenção", "Por favor, preencha todos os campos antes de rodar o cálculo!");
             return;
         }
 
         if (bRest < 0 || bRest > 100 || bIni < 0 || bIni > 100) {
-            abrirModalAlerta("Valor Inválido", "Os valores de bateria devem estar estritamente entre 0% e 100%!");
+            abrirModalAlertaFixo("Valor Inválido", "Os valores de bateria devem estar estritamente entre 0% e 100%!");
             return;
         }
 
@@ -654,11 +630,11 @@
 
         if (kTotal !== 0) {
             if (bRest >= bIni) {
-                abrirModalAlerta("Erro de Lógica", "O valor restante da bateria deve ser menor que o valor total recarregado!");
+                abrirModalAlertaFixo("Erro de Lógica", "O valor restante da bateria deve ser menor que o valor total recarregado!");
                 return;
             }
             if (listaOrdenadaValidacao.length > 0 && kTotal <= listaOrdenadaValidacao[0].kTotal) {
-                abrirModalAlerta("Erro", "O odômetro atual deve ser maior que o último registro (" + listaOrdenadaValidacao[0].kTotal + " km)!");
+                abrirModalAlertaFixo("Erro", "O odômetro atual deve ser maior que o último registro (" + listaOrdenadaValidacao[0].kTotal + " km)!");
                 return;
             }
         }
@@ -697,7 +673,7 @@
 
         desenharInterface();
         setTimeout(function() {
-            abrirModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
+            abrirModalAlertaFixo("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
         }, 300);
     }
 
@@ -721,6 +697,18 @@
                 return dataB.getTime() - dataA.getTime();
             }
             return Number(b.id) - Number(a.id);
+        });
+    }
+
+    // PURGAÇÃO COMPLETA DE CACHE DE BACKGROUND
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) { registration.unregister(); }
+        });
+    }
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            for (let name of names) { caches.delete(name); }
         });
     }
 
