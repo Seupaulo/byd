@@ -175,7 +175,7 @@
             padding: 8px 14px;
             background: #2d3748;
             border: 1px solid #4a5568;
-            font-size: 12px;
+            font-size: 13px;
             border-radius: 6px;
             box-shadow: none;
             color: #e2e8f0;
@@ -285,9 +285,9 @@
 
         .txt-blue { color: #38bdf8; font-weight: 600; }
         .txt-green { color: #4ade80; font-weight: 600; }
-        .btn-del { background-color: #de350b; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 11px; margin-top: 5px;}
+        .btn-del { background-color: #de350b; border: none; padding: 6px 12px; border-radius: 4px; color: white; cursor: pointer; font-size: 13px; margin-top: 8px;}
 
-        /* MODAL PREMIUM CUSTOMIZADO (LIVRE DE POP-UPS DO GITHUB) */
+        /* MODAL PREMIUM CUSTOMIZADO */
         .custom-modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(5, 6, 8, 0.85); backdrop-filter: blur(4px);
@@ -303,11 +303,11 @@
             transform: scale(0.9); transition: transform 0.25s ease;
         }
         .custom-modal-overlay.active .custom-modal { transform: scale(1); }
-        .modal-title { font-size: 18px; font-weight: bold; color: #00ff9d; margin-bottom: 15px; }
-        .modal-text { font-size: 15px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.5; }
+        .modal-title { font-size: 19px; font-weight: bold; color: #00ff9d; margin-bottom: 15px; }
+        .modal-text { font-size: 16px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.5; }
         .modal-buttons { display: flex; gap: 12px; justify-content: center; }
         .modal-btn {
-            padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: bold;
+            padding: 12px 24px; border-radius: 6px; font-size: 15px; font-weight: bold;
             cursor: pointer; border: none; margin: 0; width: auto; text-transform: none; box-shadow: none;
         }
         .btn-confirm { background: #00aa6c; color: #ffffff; }
@@ -318,13 +318,10 @@
 
 <div class="wrapper">
     
-    <!-- TÍTULO DE CONTROLE DE CARREGAMENTO -->
     <div class="main-title">Controle de Carregamento da Bateria</div>
     
-    <!-- GRID SUPERIOR: VALOR KWH + REGISTRO -->
     <div class="dashboard-grid">
         
-        <!-- COLUNA ESQUERDA: VALOR DO KWH -->
         <div class="card" style="border-top: 4px solid #38bdf8;">
             <div>
                 <h3>⚡ Valor do KWH</h3>
@@ -339,13 +336,12 @@
                     <input type="number" id="vKwhDc" step="0.01" value="2.10" oninput="gravarConfig()">
                 </div>
             </div>
-            <div style="font-size: 11px; color: #718096; margin-top: 25px; line-height: 1.4; border-top: 1px solid #242936; padding-top: 10px;">
+            <div style="font-size: 13px; color: #a0aec0; margin-top: 25px; line-height: 1.5; border-top: 1px solid #242936; padding-top: 12px;">
                 ⚙️ Valores aplicados como base de custo para os cálculos automotivos.
-                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Histórico Local', 'Deseja apagar todo o histórico local de recargas do seu navegador?', acaoDeletarTudo)">Zerar Histórico Local</button>
+                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', acaoDeletarTudo)">Zerar Histórico do Aparelho</button>
             </div>
         </div>
 
-        <!-- COLUNA DIREITA: REGISTRO DA RECARGA -->
         <div class="card" style="border-top: 4px solid #00ff9d;">
             <div class="card-header-actions">
                 <h3>🔋 Novo Registro de Recarga</h3>
@@ -356,7 +352,6 @@
             </div>
             
             <div class="form-grid">
-                <!-- Inputs Numéricos -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div class="input-group">
                         <label>Odômetro Total Atual (km):</label>
@@ -365,16 +360,15 @@
                     
                     <div class="input-group">
                         <label>Valor restante da bateria (%):</label>
-                        <input type="number" id="bRest" placeholder="Ex: 20">
+                        <input type="number" id="bRest" min="0" max="100" placeholder="Ex: 20">
                     </div>
                     
                     <div class="input-group">
                         <label>Valor total recarregado (%):</label>
-                        <input type="number" id="bIni" placeholder="Ex: 100">
+                        <input type="number" id="bIni" min="0" max="100" placeholder="Ex: 100">
                     </div>
                 </div>
 
-                <!-- Seletores por Bolinhas (Radio) -->
                 <div style="display: flex; flex-direction: column; gap: 15px; background-color: #1a1d24; padding: 15px; border-radius: 8px; border: 1px solid #242936; justify-content: center;">
                     <div class="input-group">
                         <label>Tipo de Carregamento:</label>
@@ -410,7 +404,6 @@
 
     </div>
 
-    <!-- SEÇÃO CENTRAL: HISTÓRICO DE RECARGAS -->
     <div class="history-section">
         <div class="section-header">
             📋 Histórico Geral de Recargas
@@ -435,14 +428,12 @@
         </div>
     </div>
 
-    <!-- SEÇÃO INFERIOR: FECHAMENTO CONSOLIDADO -->
     <div class="history-section" style="margin-top: 40px;">
         <div class="section-header" id="tituloConsolidado">
             📊 Fechamento Consolidado do Mês
         </div>
 
         <div class="month-summary-cards">
-            <!-- CARD AC -->
             <div class="summary-card" style="border-top: 4px solid #38bdf8;">
                 <div class="summary-title">Consolidado AC (Lenta)</div>
                 <div class="summary-value" id="cardAcValor" style="color: #38bdf8;">R$ 0,00</div>
@@ -452,7 +443,6 @@
                 </div>
             </div>
             
-            <!-- CARD DC -->
             <div class="summary-card" style="border-top: 4px solid #ff7849;">
                 <div class="summary-title">Consolidado DC (Rápida)</div>
                 <div class="summary-value" id="cardDcValor" style="color: #ff7849;">R$ 0,00</div>
@@ -462,7 +452,6 @@
                 </div>
             </div>
             
-            <!-- CARD TOTAL MÊS -->
             <div class="summary-card" style="border-top: 4px solid #00ff9d;">
                 <div class="summary-title">Distância Rodada (Total Mês)</div>
                 <div class="summary-value" id="cardTotalKm" style="color: #00ff9d;">0,0 km</div>
@@ -476,7 +465,6 @@
 
 </div>
 
-<!-- ESTRUTURA HTML DO MODAL CUSTOMIZADO (A PROVA DE LOGOS DE NAVEGADOR) -->
 <div id="customModalOverlay" class="custom-modal-overlay">
     <div class="custom-modal">
         <div id="customModalTitle" class="modal-title">Título</div>
@@ -499,7 +487,7 @@
     function mostrarModalAlerta(titulo, texto) {
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
-        document.getElementById('modalBtnCancel').style.display = 'none'; // Oculta o cancelar em alertas comuns
+        document.getElementById('modalBtnCancel').style.display = 'none';
         
         const btnConfirm = document.getElementById('modalBtnConfirm');
         btnConfirm.innerText = "Entendido";
@@ -593,17 +581,16 @@
         .then(res => res.json())
         .then(res => {
             if(res.status === "sucesso") {
-                // Salva diretamente a lista recebida (A ordenação por data cuidará do resto)
                 localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
                 desenharInterface();
-                mostrarModalAlerta("Sucesso", "Histórico sincronizado com sucesso direto do Google Sheets!");
+                mostrarModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
             } else {
-                mostrarModalAlerta("Erro", "Erro ao ler da planilha: " + res.mensagem);
+                mostrarModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
             }
         })
         .catch(err => {
             console.error(err);
-            mostrarModalAlerta("Erro", "Erro de rede ao conectar à nuvem do Google.");
+            mostrarModalAlerta("Erro", "Erro de rede ao conectar ao banco da nuvem.");
         })
         .finally(() => {
             btn.innerText = "📥 Sincronizar com Nuvem";
@@ -628,14 +615,17 @@
             return;
         }
 
-        var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
+        if (bRest < 0 || bRest > 100 || bIni < 0 || bIni > 100) {
+            mostrarModalAlerta("Valor Inválido", "Os valores de bateria devem estar estritamente entre 0% e 100%!");
+            return;
+        }
 
-        // Inicia a validação usando a lista já ordenada cronologicamente
+        var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
         var listaOrdenadaValidacao = ordenarListaPorData(lista);
 
         if (kTotal !== 0) {
             if (bRest >= bIni) {
-                mostrarModalAlerta("Erro", "O valor restante da bateria deve ser menor que o valor total recarregado!");
+                mostrarModalAlerta("Erro de Lógica", "O valor restante da bateria deve ser menor que o valor total recarregado!");
                 return;
             }
             if (listaOrdenadaValidacao.length > 0 && kTotal <= listaOrdenadaValidacao[0].kTotal) {
@@ -677,18 +667,14 @@
         document.getElementById('bIni').value = '';
 
         desenharInterface();
+        mostrarModalAlerta("Registro Salvo", "Cálculo concluído! Os dados foram sincronizados e armazenados em segurança na sua nuvem.");
     }
 
-    // FUNÇÃO COMPLEMENTAR: TRANSFORMA DATA STRING BR EM COMPATÍVEL PARA ORDENAÇÃO
     function converterParaDataObjeto(registro) {
         if (!registro.data) return new Date(0);
-        
-        // Se já for data ISO da planilha (AAAA-MM-DD), o JS aceita nativamente
         if (registro.data.includes('-')) {
             return new Date(registro.data.split('T')[0]);
         }
-        
-        // Se for data BR (DD/MM/AAAA)
         var partes = registro.data.split('/');
         if (partes.length === 3) {
             return new Date(partes[2], partes[1] - 1, partes[0]);
@@ -696,24 +682,19 @@
         return new Date(0);
     }
 
-    // FUNÇÃO QUE DETÉM A LÓGICA DE ORDENAÇÃO COMPLETA
     function ordenarListaPorData(lista) {
         return lista.sort(function(a, b) {
             var dataA = converterParaDataObjeto(a);
             var dataB = converterParaDataObjeto(b);
-            
             if (dataA.getTime() !== dataB.getTime()) {
-                return dataB.getTime() - dataA.getTime(); // Mais recente primeiro
+                return dataB.getTime() - dataA.getTime();
             }
-            // Se as datas forem idênticas, desempata pelo ID/Timestamp numérico
             return Number(b.id) - Number(a.id);
         });
     }
 
     function desenharInterface() {
         var listaCrua = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
-        
-        // EXECUTA A ORDENAÇÃO CRONOLÓGICA DAS DATAS ANTES DE FAZER OS CÁLCULOS
         var lista = ordenarListaPorData(listaCrua);
 
         var corpo = document.getElementById('linhasTabela');
@@ -726,10 +707,9 @@
 
         var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
 
-        // Processa as viagens na ordem correta do tempo (do mais antigo para o mais novo)
         for (var i = lista.length - 1; i >= 0; i--) {
             var item = lista[i];
-            var itemAnterior = lista[i + 1]; // O próximo no índice é cronologicamente o anterior
+            var itemAnterior = lista[i + 1];
 
             var deltaKm = 0;
             var batGastaNaViagem = 0;
@@ -787,7 +767,7 @@
 
             var tr = document.createElement('tr');
             tr.innerHTML = '<td>' + dataExibicao + '</td>' +
-                           '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
+                           '<td>' + txtKmGeral + '<span style="font-size:13px; color:#cbd5e1; display:block; font-weight:600;">' + txtDelta + '</span></td>' +
                            '<td>' + badgeCarga + '</td>' +
                            '<td>' + badgeModo + '</td>' +
                            '<td>' + txtBatGasta + '</td>' +
@@ -813,7 +793,7 @@
     function acaoDeletarTudo() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
-        mostrarModalAlerta("Sucesso", "O histórico local foi zerado.");
+        mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
     }
 </script>
 </body>
