@@ -181,11 +181,6 @@
             color: #e2e8f0;
         }
 
-        .btn-cloud-up {
-            background: #1e3a8a;
-            border: 1px solid #3b82f6;
-        }
-
         .btn-cloud-down {
             background: #022c22;
             border: 1px solid #10b981;
@@ -208,7 +203,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* ESTRUTURA DE FECHAMENTO MENSAL NO RODAPÉ */
+        /* FECHAMENTO CONSOLIDADO */
         .month-summary-cards {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -291,6 +286,32 @@
         .txt-blue { color: #38bdf8; font-weight: 600; }
         .txt-green { color: #4ade80; font-weight: 600; }
         .btn-del { background-color: #de350b; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer; font-size: 11px; margin-top: 5px;}
+
+        /* MODAL PREMIUM CUSTOMIZADO (LIVRE DE POP-UPS DO GITHUB) */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 6, 8, 0.85); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .custom-modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .custom-modal {
+            background: #161920; border: 1px solid #2d3748; border-radius: 12px;
+            padding: 25px; max-width: 420px; width: 90%; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            transform: scale(0.9); transition: transform 0.25s ease;
+        }
+        .custom-modal-overlay.active .custom-modal { transform: scale(1); }
+        .modal-title { font-size: 18px; font-weight: bold; color: #00ff9d; margin-bottom: 15px; }
+        .modal-text { font-size: 15px; color: #cbd5e1; margin-bottom: 25px; line-height: 1.5; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+        .modal-btn {
+            padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: bold;
+            cursor: pointer; border: none; margin: 0; width: auto; text-transform: none; box-shadow: none;
+        }
+        .btn-confirm { background: #00aa6c; color: #ffffff; }
+        .btn-cancel { background: #2d3748; color: #cbd5e1; border: 1px solid #4a5568; }
     </style>
 </head>
 <body>
@@ -306,7 +327,7 @@
         <!-- COLUNA ESQUERDA: VALOR DO KWH -->
         <div class="card" style="border-top: 4px solid #38bdf8;">
             <div>
-                <h3>⚡ Valor do KWh</h3>
+                <h3>⚡ Valor do KWH</h3>
                 
                 <div class="input-group">
                     <label>Carga Lenta AC (R$):</label>
@@ -320,7 +341,7 @@
             </div>
             <div style="font-size: 11px; color: #718096; margin-top: 25px; line-height: 1.4; border-top: 1px solid #242936; padding-top: 10px;">
                 ⚙️ Valores aplicados como base de custo para os cálculos automotivos.
-                <button class="btn-del" onclick="deletarTudo()">Zerar Histórico Local</button>
+                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Histórico Local', 'Deseja apagar todo o histórico local de recargas do seu navegador?', acaoDeletarTudo)">Zerar Histórico Local</button>
             </div>
         </div>
 
@@ -329,8 +350,8 @@
             <div class="card-header-actions">
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
-                    <button class="btn-ha btn-cloud-down" onclick="baixarDaNuvem()">📥 Sincronizar com a Nuvem</button>
-                    <button class="btn-ha" onclick="alert('Não Implantado Ainda.')">🔄 Sincronizar HA</button>
+                    <button class="btn-ha btn-cloud-down" onclick="mostrarModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', baixarDaNuvem)">📥 Sincronizar com Nuvem</button>
+                    <button class="btn-ha" onclick="mostrarModalAlerta('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
             
@@ -414,7 +435,7 @@
         </div>
     </div>
 
-    <!-- SEÇÃO INFERIOR: FECHAMENTO CONSOLIDADO DO MÊS (RODAPÉ) -->
+    <!-- SEÇÃO INFERIOR: FECHAMENTO CONSOLIDADO -->
     <div class="history-section" style="margin-top: 40px;">
         <div class="section-header" id="tituloConsolidado">
             📊 Fechamento Consolidado do Mês
@@ -455,9 +476,59 @@
 
 </div>
 
+<!-- ESTRUTURA HTML DO MODAL CUSTOMIZADO (A PROVA DE LOGOS DE NAVEGADOR) -->
+<div id="customModalOverlay" class="custom-modal-overlay">
+    <div class="custom-modal">
+        <div id="customModalTitle" class="modal-title">Título</div>
+        <div id="customModalText" class="modal-text">Conteúdo do aviso.</div>
+        <div id="customModalButtons" class="modal-buttons">
+            <button id="modalBtnCancel" class="modal-btn btn-cancel" onclick="fecharModal()">Cancelar</button>
+            <button id="modalBtnConfirm" class="modal-btn btn-confirm">Confirmar</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // URL DE COMUNICAÇÃO GERADA PELO GOOGLE APPS SCRIPT
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVxVo5PDuuXsSqFFcmGg9HNrrqzO5hUTj4bRpejWyONXeMfm9lb_TPDsmK9yZtKQeNog/exec";
+    const GOOGLE_SCRIPT_URL = "COLE_AQUI_SUA_URL_DO_WEB_APP";
+
+    // VARIÁVEL GLOBAL PARA CALLBACKS DO MODAL
+    let modalCallback = null;
+
+    // SISTEMA VISUAL DE POP-UPS CUSTOMIZADOS
+    function mostrarModalAlerta(titulo, texto) {
+        document.getElementById('customModalTitle').innerText = titulo;
+        document.getElementById('customModalText').innerText = texto;
+        document.getElementById('modalBtnCancel').style.display = 'none'; // Oculta o cancelar em alertas comuns
+        
+        const btnConfirm = document.getElementById('modalBtnConfirm');
+        btnConfirm.innerText = "Entendido";
+        btnConfirm.onclick = fecharModal;
+        
+        document.getElementById('customModalOverlay').classList.add('active');
+    }
+
+    function mostrarModalConfirmacao(titulo, texto, callbackSucesso) {
+        document.getElementById('customModalTitle').innerText = titulo;
+        document.getElementById('customModalText').innerText = texto;
+        document.getElementById('modalBtnCancel').style.display = 'inline-block';
+        
+        const btnConfirm = document.getElementById('modalBtnConfirm');
+        btnConfirm.innerText = "Confirmar";
+        
+        modalCallback = callbackSucesso;
+        btnConfirm.onclick = function() {
+            fecharModal();
+            if(modalCallback) modalCallback();
+        };
+        
+        document.getElementById('customModalOverlay').classList.add('active');
+    }
+
+    function fecharModal() {
+        document.getElementById('customModalOverlay').classList.remove('active');
+        modalCallback = null;
+    }
 
     // BOMBA DE LIMPEZA CONTRA SERVICE WORKERS PRESOS
     if ('serviceWorker' in navigator) {
@@ -491,13 +562,12 @@
         desenharInterface();
     }
 
-    // ENVIAR REGISTRO PARA O GOOGLE SHEETS
     function salvarNaNuvem(registroObjeto) {
         if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) return;
 
         fetch(GOOGLE_SCRIPT_URL, {
             method: "POST",
-            mode: "no-cors", // Garante que a multimídia envie sem travar nas regras de CORS do Google
+            mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ acao: "salvar", dados: registroObjeto })
         })
@@ -505,45 +575,41 @@
         .catch(err => console.error("Erro no envio em background:", err));
     }
 
-    // RECONSTRUIR LOCALSTORAGE BAIXANDO DO GOOGLE SHEETS
- // RECONSTRUIR LOCALSTORAGE BAIXANDO DO GOOGLE SHEETS
-function baixarDaNuvem() {
-    if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
-        alert("Configure a URL do Script no seu arquivo index.html primeiro!");
-        return;
-    }
-
-    if(!confirm("Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.")) return;
-
-    const btn = document.querySelector('.btn-cloud-down');
-    btn.innerText = "📥 Sincronizando..."; // <-- Texto durante o carregamento
-    btn.disabled = true;
-
-    fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ acao: "baixar" })
-    })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === "sucesso") {
-            var dadosInvertidos = res.dados.reverse();
-            localStorage.setItem('byd_local_data_v5', JSON.stringify(dadosInvertidos));
-            desenharInterface();
-            alert("📊 Histórico sincronizado com sucesso direto do Google Sheets!");
-        } else {
-            alert("Erro ao ler da planilha: " + res.mensagem);
+    function baixarDaNuvem() {
+        if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
+            mostrarModalAlerta("Aviso", "Configure a URL do Script no seu arquivo index.html primeiro!");
+            return;
         }
-    })
-    .catch(err => {
-        console.error(err);
-        alert("❌ Erro de rede ao conectar à nuvem do Google.");
-    })
-    .finally(() => {
-        btn.innerText = "📥 Sincronizar com Nuvem"; // <-- Texto fixo final corrigido aqui!
-        btn.disabled = false;
-    });
-}
+
+        const btn = document.querySelector('.btn-cloud-down');
+        btn.innerText = "📥 Sincronizando...";
+        btn.disabled = true;
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ acao: "baixar" })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if(res.status === "sucesso") {
+                // Salva diretamente a lista recebida (A ordenação por data cuidará do resto)
+                localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
+                desenharInterface();
+                mostrarModalAlerta("Sucesso", "Histórico sincronizado com sucesso direto do Google Sheets!");
+            } else {
+                mostrarModalAlerta("Erro", "Erro ao ler da planilha: " + res.mensagem);
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            mostrarModalAlerta("Erro", "Erro de rede ao conectar à nuvem do Google.");
+        })
+        .finally(() => {
+            btn.innerText = "📥 Sincronizar com Nuvem";
+            btn.disabled = false;
+        });
+    }
 
     function adicionarDados() {
         var kTotal = parseFloat(document.getElementById('kTotal').value);
@@ -558,19 +624,22 @@ function baixarDaNuvem() {
         var precoAplicado = (tipoCarga === 'AC') ? kwhPrecoAc : kwhPrecoDc;
 
         if (isNaN(kTotal) || isNaN(bIni) || isNaN(bRest)) {
-            alert("Por favor, preencha todos os campos antes de rodar o cálculo!");
+            mostrarModalAlerta("Atenção", "Por favor, preencha todos os campos antes de rodar o cálculo!");
             return;
         }
 
         var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
 
+        // Inicia a validação usando a lista já ordenada cronologicamente
+        var listaOrdenadaValidacao = ordenarListaPorData(lista);
+
         if (kTotal !== 0) {
             if (bRest >= bIni) {
-                alert("O valor restante da bateria deve ser menor que o valor total recarregado!");
+                mostrarModalAlerta("Erro", "O valor restante da bateria deve ser menor que o valor total recarregado!");
                 return;
             }
-            if (lista.length > 0 && kTotal <= lista[0].kTotal) {
-                alert("O odômetro atual deve ser maior que o último registro (" + lista[0].kTotal + " km)!");
+            if (listaOrdenadaValidacao.length > 0 && kTotal <= listaOrdenadaValidacao[0].kTotal) {
+                mostrarModalAlerta("Erro", "O odômetro atual deve ser maior que o último registro (" + listaOrdenadaValidacao[0].kTotal + " km)!");
                 return;
             }
         }
@@ -598,14 +667,11 @@ function baixarDaNuvem() {
             custoDinheiro: custoDinheiroRecarga
         };
 
-        // 1. Salva no navegador local (Uso instantâneo)
         lista.unshift(registro); 
         localStorage.setItem('byd_local_data_v5', JSON.stringify(lista));
 
-        // 2. Dispara a cópia de segurança em segundo plano para o Google Sheets
         salvarNaNuvem(registro);
 
-        // Limpar formulário
         document.getElementById('bRest').value = '';
         document.getElementById('kTotal').value = '';
         document.getElementById('bIni').value = '';
@@ -613,107 +679,141 @@ function baixarDaNuvem() {
         desenharInterface();
     }
 
-function desenharInterface() {
-    var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
-    var corpo = document.getElementById('linhasTabela');
-    corpo.innerHTML = '';
+    // FUNÇÃO COMPLEMENTAR: TRANSFORMA DATA STRING BR EM COMPATÍVEL PARA ORDENAÇÃO
+    function converterParaDataObjeto(registro) {
+        if (!registro.data) return new Date(0);
+        
+        // Se já for data ISO da planilha (AAAA-MM-DD), o JS aceita nativamente
+        if (registro.data.includes('-')) {
+            return new Date(registro.data.split('T')[0]);
+        }
+        
+        // Se for data BR (DD/MM/AAAA)
+        var partes = registro.data.split('/');
+        if (partes.length === 3) {
+            return new Date(partes[2], partes[1] - 1, partes[0]);
+        }
+        return new Date(0);
+    }
 
-    var dAtual = new Date();
-    var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
-    var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-    document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
-
-    var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
-
-    for (var i = lista.length - 1; i >= 0; i--) {
-        var item = lista[i];
-        var itemAnterior = lista[i + 1];
-
-        var deltaKm = 0;
-        var batGastaNaViagem = 0;
-        var mediaKwh = 0;
-        var custoPorKm = 0;
-
-        if (itemAnterior) {
-            deltaKm = item.kTotal - itemAnterior.kTotal;
-            batGastaNaViagem = itemAnterior.bIni - item.bRest;
+    // FUNÇÃO QUE DETÉM A LÓGICA DE ORDENAÇÃO COMPLETA
+    function ordenarListaPorData(lista) {
+        return lista.sort(function(a, b) {
+            var dataA = converterParaDataObjeto(a);
+            var dataB = converterParaDataObjeto(b);
             
-            if (deltaKm > 0 && batGastaNaViagem > 0) {
-                var kwhConsumidoNaViagem = (batGastaNaViagem / 100) * 38;
-                mediaKwh = (kwhConsumidoNaViagem * 100) / deltaKm;
-                custoPorKm = item.custoDinheiro / deltaKm;
+            if (dataA.getTime() !== dataB.getTime()) {
+                return dataB.getTime() - dataA.getTime(); // Mais recente primeiro
+            }
+            // Se as datas forem idênticas, desempata pelo ID/Timestamp numérico
+            return Number(b.id) - Number(a.id);
+        });
+    }
+
+    function desenharInterface() {
+        var listaCrua = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
+        
+        // EXECUTA A ORDENAÇÃO CRONOLÓGICA DAS DATAS ANTES DE FAZER OS CÁLCULOS
+        var lista = ordenarListaPorData(listaCrua);
+
+        var corpo = document.getElementById('linhasTabela');
+        corpo.innerHTML = '';
+
+        var dAtual = new Date();
+        var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
+        var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
+
+        var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
+
+        // Processa as viagens na ordem correta do tempo (do mais antigo para o mais novo)
+        for (var i = lista.length - 1; i >= 0; i--) {
+            var item = lista[i];
+            var itemAnterior = lista[i + 1]; // O próximo no índice é cronologicamente o anterior
+
+            var deltaKm = 0;
+            var batGastaNaViagem = 0;
+            var mediaKwh = 0;
+            var custoPorKm = 0;
+
+            if (itemAnterior) {
+                deltaKm = item.kTotal - itemAnterior.kTotal;
+                batGastaNaViagem = itemAnterior.bIni - item.bRest;
+                
+                if (deltaKm > 0 && batGastaNaViagem > 0) {
+                    var kwhConsumidoNaViagem = (batGastaNaViagem / 100) * 38;
+                    mediaKwh = (kwhConsumidoNaViagem * 100) / deltaKm;
+                    custoPorKm = item.custoDinheiro / deltaKm;
+                }
+            }
+
+            item.exibirDelta = deltaKm;
+            item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
+            item.exibirMedia = mediaKwh;
+            item.exibirCustoKm = custoPorKm;
+
+            if (item.mesAno === mesAtualChave && deltaKm > 0) {
+                if (item.tipoCarga === 'AC') {
+                    resumo.acGasto += item.custoDinheiro;
+                    resumo.acKm += deltaKm;
+                } else {
+                    resumo.dcGasto += item.custoDinheiro;
+                    resumo.dcKm += deltaKm;
+                }
+                resumo.totalGasto += item.custoDinheiro;
+                resumo.totalKm += deltaKm;
             }
         }
 
-        item.exibirDelta = deltaKm;
-        item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
-        item.exibirMedia = mediaKwh;
-        item.exibirCustoKm = custoPorKm;
-
-        if (item.mesAno === mesAtualChave && deltaKm > 0) {
-            if (item.tipoCarga === 'AC') {
-                resumo.acGasto += item.custoDinheiro;
-                resumo.acKm += deltaKm;
-            } else {
-                resumo.dcGasto += item.custoDinheiro;
-                resumo.dcKm += deltaKm;
+        for (var j = 0; j < lista.length; j++) {
+            var r = lista[j];
+            
+            var dataExibicao = r.data;
+            if (dataExibicao && dataExibicao.includes('T') && dataExibicao.includes('-')) {
+                try {
+                    var partesData = dataExibicao.split('T')[0].split('-');
+                    dataExibicao = partesData[2] + '/' + partesData[1] + '/' + partesData[0];
+                } catch(e) { console.log("Erro fuso data", e); }
             }
-            resumo.totalGasto += item.custoDinheiro;
-            resumo.totalKm += deltaKm;
+            
+            var txtKmGeral = r.kTotal + " km";
+            var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
+            var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
+            var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
+            var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
+
+            var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
+            var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
+
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + dataExibicao + '</td>' +
+                           '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
+                           '<td>' + badgeCarga + '</td>' +
+                           '<td>' + badgeModo + '</td>' +
+                           '<td>' + txtBatGasta + '</td>' +
+                           '<td class="txt-blue">' + txtMedia + '</td>' +
+                           '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
+                           '<td class="txt-green">' + txtCustoKm + '</td>';
+            corpo.appendChild(tr);
         }
+
+        document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
+        document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
+        document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
+
+        document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
+        document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
+        document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
+
+        document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
+        document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
+        document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
-    for (var j = 0; j < lista.length; j++) {
-        var r = lista[j];
-        
-        // TRATAMENTO INTELIGENTE CONTRA DATA FORMATO ISO DA PLANILHA (Se contiver 'T' e '-')
-        var dataExibicao = r.data;
-        if (dataExibicao && dataExibicao.includes('T') && dataExibicao.includes('-')) {
-            try {
-                var partesData = dataExibicao.split('T')[0].split('-'); // Quebra em [2026, 06, 12]
-                dataExibicao = partesData[2] + '/' + partesData[1] + '/' + partesData[0]; // Remonta DD/MM/AAAA
-            } catch(e) { console.log("Erro ao formatar string de data ISO", e); }
-        }
-        
-        var txtKmGeral = r.kTotal + " km";
-        var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
-        var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
-        var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
-        var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
-
-        var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
-        var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
-
-        var tr = document.createElement('tr');
-        tr.innerHTML = '<td>' + dataExibicao + '</td>' +
-                       '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
-                       '<td>' + badgeCarga + '</td>' +
-                       '<td>' + badgeModo + '</td>' +
-                       '<td>' + txtBatGasta + '</td>' +
-                       '<td class="txt-blue">' + txtMedia + '</td>' +
-                       '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
-                       '<td class="txt-green">' + txtCustoKm + '</td>';
-        corpo.appendChild(tr);
-    }
-
-    document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
-    document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
-    document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
-
-    document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
-    document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
-    document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
-
-    document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
-    document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
-    document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
-}
-
-    function deletarTudo() {
-        if (confirm("Deseja apagar todo o histórico local de recargas do navegador?")) {
-            localStorage.removeItem('byd_local_data_v5');
-            desenharInterface();
-        }
+    function acaoDeletarTudo() {
+        localStorage.removeItem('byd_local_data_v5');
+        desenharInterface();
+        mostrarModalAlerta("Sucesso", "O histórico local foi zerado.");
     }
 </script>
 </body>
