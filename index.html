@@ -613,92 +613,101 @@
         desenharInterface();
     }
 
-    function desenharInterface() {
-        var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
-        var corpo = document.getElementById('linhasTabela');
-        corpo.innerHTML = '';
+function desenharInterface() {
+    var lista = JSON.parse(localStorage.getItem('byd_local_data_v5')) || [];
+    var corpo = document.getElementById('linhasTabela');
+    corpo.innerHTML = '';
 
-        var dAtual = new Date();
-        var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
-        var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
+    var dAtual = new Date();
+    var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
+    var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+    document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
 
-        var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
+    var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
 
-        for (var i = lista.length - 1; i >= 0; i--) {
-            var item = lista[i];
-            var itemAnterior = lista[i + 1];
+    for (var i = lista.length - 1; i >= 0; i--) {
+        var item = lista[i];
+        var itemAnterior = lista[i + 1];
 
-            var deltaKm = 0;
-            var batGastaNaViagem = 0;
-            var mediaKwh = 0;
-            var custoPorKm = 0;
+        var deltaKm = 0;
+        var batGastaNaViagem = 0;
+        var mediaKwh = 0;
+        var custoPorKm = 0;
 
-            if (itemAnterior) {
-                deltaKm = item.kTotal - itemAnterior.kTotal;
-                batGastaNaViagem = itemAnterior.bIni - item.bRest;
-                
-                if (deltaKm > 0 && batGastaNaViagem > 0) {
-                    var kwhConsumidoNaViagem = (batGastaNaViagem / 100) * 38;
-                    mediaKwh = (kwhConsumidoNaViagem * 100) / deltaKm;
-                    custoPorKm = item.custoDinheiro / deltaKm;
-                }
-            }
-
-            item.exibirDelta = deltaKm;
-            item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
-            item.exibirMedia = mediaKwh;
-            item.exibirCustoKm = custoPorKm;
-
-            if (item.mesAno === mesAtualChave && deltaKm > 0) {
-                if (item.tipoCarga === 'AC') {
-                    resumo.acGasto += item.custoDinheiro;
-                    resumo.acKm += deltaKm;
-                } else {
-                    resumo.dcGasto += item.custoDinheiro;
-                    resumo.dcKm += deltaKm;
-                }
-                resumo.totalGasto += item.custoDinheiro;
-                resumo.totalKm += deltaKm;
-            }
-        }
-
-        for (var j = 0; j < lista.length; j++) {
-            var r = lista[j];
+        if (itemAnterior) {
+            deltaKm = item.kTotal - itemAnterior.kTotal;
+            batGastaNaViagem = itemAnterior.bIni - item.bRest;
             
-            var txtKmGeral = r.kTotal + " km";
-            var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
-            var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
-            var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
-            var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
-
-            var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
-            var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
-
-            var tr = document.createElement('tr');
-            tr.innerHTML = '<td>' + r.data + '</td>' +
-                           '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
-                           '<td>' + badgeCarga + '</td>' +
-                           '<td>' + badgeModo + '</td>' +
-                           '<td>' + txtBatGasta + '</td>' +
-                           '<td class="txt-blue">' + txtMedia + '</td>' +
-                           '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
-                           '<td class="txt-green">' + txtCustoKm + '</td>';
-            corpo.appendChild(tr);
+            if (deltaKm > 0 && batGastaNaViagem > 0) {
+                var kwhConsumidoNaViagem = (batGastaNaViagem / 100) * 38;
+                mediaKwh = (kwhConsumidoNaViagem * 100) / deltaKm;
+                custoPorKm = item.custoDinheiro / deltaKm;
+            }
         }
 
-        document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
-        document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
-        document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
+        item.exibirDelta = deltaKm;
+        item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
+        item.exibirMedia = mediaKwh;
+        item.exibirCustoKm = custoPorKm;
 
-        document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
-        document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
-        document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
-
-        document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
-        document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
-        document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
+        if (item.mesAno === mesAtualChave && deltaKm > 0) {
+            if (item.tipoCarga === 'AC') {
+                resumo.acGasto += item.custoDinheiro;
+                resumo.acKm += deltaKm;
+            } else {
+                resumo.dcGasto += item.custoDinheiro;
+                resumo.dcKm += deltaKm;
+            }
+            resumo.totalGasto += item.custoDinheiro;
+            resumo.totalKm += deltaKm;
+        }
     }
+
+    for (var j = 0; j < lista.length; j++) {
+        var r = lista[j];
+        
+        // TRATAMENTO INTELIGENTE CONTRA DATA FORMATO ISO DA PLANILHA (Se contiver 'T' e '-')
+        var dataExibicao = r.data;
+        if (dataExibicao && dataExibicao.includes('T') && dataExibicao.includes('-')) {
+            try {
+                var partesData = dataExibicao.split('T')[0].split('-'); // Quebra em [2026, 06, 12]
+                dataExibicao = partesData[2] + '/' + partesData[1] + '/' + partesData[0]; // Remonta DD/MM/AAAA
+            } catch(e) { console.log("Erro ao formatar string de data ISO", e); }
+        }
+        
+        var txtKmGeral = r.kTotal + " km";
+        var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
+        var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
+        var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
+        var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
+
+        var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
+        var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
+
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + dataExibicao + '</td>' +
+                       '<td>' + txtKmGeral + '<span style="font-size:11px; color:#a0aec0; display:block">' + txtDelta + '</span></td>' +
+                       '<td>' + badgeCarga + '</td>' +
+                       '<td>' + badgeModo + '</td>' +
+                       '<td>' + txtBatGasta + '</td>' +
+                       '<td class="txt-blue">' + txtMedia + '</td>' +
+                       '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
+                       '<td class="txt-green">' + txtCustoKm + '</td>';
+        corpo.appendChild(tr);
+    }
+
+    document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
+    document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
+    document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
+
+    document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
+    document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
+    document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
+
+    document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
+    document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
+    document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
+}
 
     function deletarTudo() {
         if (confirm("Deseja apagar todo o histórico local de recargas do navegador?")) {
