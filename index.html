@@ -506,44 +506,44 @@
     }
 
     // RECONSTRUIR LOCALSTORAGE BAIXANDO DO GOOGLE SHEETS
-    function baixarDaNuvem() {
-        if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
-            alert("Configure a URL do Script no seu arquivo index.html primeiro!");
-            return;
-        }
-
-        if(!confirm("Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.")) return;
-
-        const btn = document.querySelector('.btn-cloud-down');
-        btn.innerText = "📥 Baixando...";
-        btn.disabled = true;
-
-        fetch(GOOGLE_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" }, // Dribla o CORS na leitura
-            body: JSON.stringify({ acao: "baixar" })
-        })
-        .then(res => res.json())
-        .then(res => {
-            if(res.status === "sucesso") {
-                // Inverte a ordem antes de salvar para manter o mais novo no topo da lista
-                var dadosInvertidos = res.dados.reverse();
-                localStorage.setItem('byd_local_data_v5', JSON.stringify(dadosInvertidos));
-                desenharInterface();
-                alert("📊 Histórico sincronizado com sucesso!");
-            } else {
-                alert("Erro ao ler da planilha: " + res.mensagem);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("❌ Erro de rede ao conectar à nuvem do Google.");
-        })
-        .finally(() => {
-            btn.innerText = "📥 Sincronizar com Nuvem";
-            btn.disabled = false;
-        });
+ // RECONSTRUIR LOCALSTORAGE BAIXANDO DO GOOGLE SHEETS
+function baixarDaNuvem() {
+    if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
+        alert("Configure a URL do Script no seu arquivo index.html primeiro!");
+        return;
     }
+
+    if(!confirm("Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.")) return;
+
+    const btn = document.querySelector('.btn-cloud-down');
+    btn.innerText = "📥 Sincronizando..."; // <-- Texto durante o carregamento
+    btn.disabled = true;
+
+    fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ acao: "baixar" })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === "sucesso") {
+            var dadosInvertidos = res.dados.reverse();
+            localStorage.setItem('byd_local_data_v5', JSON.stringify(dadosInvertidos));
+            desenharInterface();
+            alert("📊 Histórico sincronizado com sucesso direto do Google Sheets!");
+        } else {
+            alert("Erro ao ler da planilha: " + res.mensagem);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("❌ Erro de rede ao conectar à nuvem do Google.");
+    })
+    .finally(() => {
+        btn.innerText = "📥 Sincronizar com Nuvem"; // <-- Texto fixo final corrigido aqui!
+        btn.disabled = false;
+    });
+}
 
     function adicionarDados() {
         var kTotal = parseFloat(document.getElementById('kTotal').value);
