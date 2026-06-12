@@ -60,9 +60,17 @@
             justify-content: space-between;
         }
         
-        h3 { 
-            margin-top: 0; 
+        .card-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
+            border-bottom: 1px solid #242936;
+            padding-bottom: 10px;
+        }
+
+        h3 { 
+            margin: 0;
             text-align: left; 
             color: #00ff9d; 
             font-size: 18px; 
@@ -72,8 +80,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            border-bottom: 1px solid #242936;
-            padding-bottom: 10px;
         }
 
         /* Formulário */
@@ -139,7 +145,7 @@
             transform: scale(1.3);
         }
         
-        /* Botão Principal */
+        /* Botões */
         button { 
             width: 100%; 
             padding: 16px; 
@@ -154,6 +160,18 @@
             box-shadow: 0 4px 12px rgba(0, 170, 108, 0.3);
             text-transform: uppercase;
             letter-spacing: 1px;
+        }
+
+        .btn-ha {
+            width: auto;
+            margin: 0;
+            padding: 8px 14px;
+            background: #2d3748;
+            border: 1px solid #4a5568;
+            font-size: 12px;
+            border-radius: 6px;
+            box-shadow: none;
+            color: #e2e8f0;
         }
 
         /* HISTÓRICO E SEÇÕES DA PÁGINA */
@@ -262,13 +280,10 @@
 
 <div class="wrapper">
     
-    <!-- TÍTULO DE CONTROLE DE CARREGAMENTO -->
     <div class="main-title">Controle de Carregamento da Bateria</div>
     
-    <!-- GRID SUPERIOR: VALOR KWH + REGISTRO -->
     <div class="dashboard-grid">
         
-        <!-- COLUNA ESQUERDA: VALOR DO KWH -->
         <div class="card" style="border-top: 4px solid #38bdf8;">
             <div>
                 <h3>⚡ Valor do KWH</h3>
@@ -289,12 +304,13 @@
             </div>
         </div>
 
-        <!-- COLUNA DIREITA: REGISTRO DA RECARGA -->
         <div class="card" style="border-top: 4px solid #00ff9d;">
-            <h3>🔋 Novo Registro de Recarga</h3>
+            <div class="card-header-actions">
+                <h3>🔋 Novo Registro de Recarga</h3>
+                <button class="btn-ha" onclick="alert('Modo Design: Simulação de sincronismo de telemetria com o Home Assistant.')">🔄 Sincronizar HA</button>
+            </div>
             
             <div class="form-grid">
-                <!-- Inputs Numéricos Reordenados -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div class="input-group">
                         <label>Odômetro Total Atual (km):</label>
@@ -312,7 +328,6 @@
                     </div>
                 </div>
 
-                <!-- Seletores por Bolinhas (Radio) -->
                 <div style="display: flex; flex-direction: column; gap: 15px; background-color: #1a1d24; padding: 15px; border-radius: 8px; border: 1px solid #242936; justify-content: center;">
                     <div class="input-group">
                         <label>Tipo de Carregamento:</label>
@@ -348,7 +363,6 @@
 
     </div>
 
-    <!-- SEÇÃO CENTRAL: HISTÓRICO DE RECARGAS -->
     <div class="history-section">
         <div class="section-header">
             📋 Histórico Geral de Recargas
@@ -373,14 +387,12 @@
         </div>
     </div>
 
-    <!-- SEÇÃO INFERIOR: FECHAMENTO CONSOLIDADO DO MÊS (RODAPÉ) -->
     <div class="history-section" style="margin-top: 40px;">
         <div class="section-header" id="tituloConsolidado">
             📊 Fechamento Consolidado do Mês
         </div>
 
         <div class="month-summary-cards">
-            <!-- CARD AC -->
             <div class="summary-card" style="border-top: 4px solid #38bdf8;">
                 <div class="summary-title">Consolidado AC (Lenta)</div>
                 <div class="summary-value" id="cardAcValor" style="color: #38bdf8;">R$ 0,00</div>
@@ -390,7 +402,6 @@
                 </div>
             </div>
             
-            <!-- CARD DC -->
             <div class="summary-card" style="border-top: 4px solid #ff7849;">
                 <div class="summary-title">Consolidado DC (Rápida)</div>
                 <div class="summary-value" id="cardDcValor" style="color: #ff7849;">R$ 0,00</div>
@@ -400,7 +411,6 @@
                 </div>
             </div>
             
-            <!-- CARD TOTAL MÊS -->
             <div class="summary-card" style="border-top: 4px solid #00ff9d;">
                 <div class="summary-title">Distância Rodada (Total Mês)</div>
                 <div class="summary-value" id="cardTotalKm" style="color: #00ff9d;">0,0 km</div>
@@ -415,6 +425,24 @@
 </div>
 
 <script>
+    // BOMBA DE LIMPEZA CONTRA SERVICE WORKERS PRESOS
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (let registration of registrations) {
+                registration.unregister().then(function(success) {
+                    if(success) { console.log('Worker antigo destruído.'); }
+                });
+            }
+        });
+    }
+
+    // LIMPEZA FORÇADA DOS ARQUIVOS DE CACHE DO NAVEGADOR
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            for (let name of names) { caches.delete(name); }
+        });
+    }
+
     window.onload = function() {
         var ac = localStorage.getItem('byd_local_ac_v5');
         var dc = localStorage.getItem('byd_local_dc_v5');
@@ -483,7 +511,6 @@
         lista.unshift(registro); 
         localStorage.setItem('byd_local_data_v5', JSON.stringify(lista));
 
-        // Limpar os campos numéricos por completo para a próxima inserção
         document.getElementById('bRest').value = '';
         document.getElementById('kTotal').value = '';
         document.getElementById('bIni').value = '';
