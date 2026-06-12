@@ -790,11 +790,12 @@
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
-    function acaoDeletarTudo() {
+ // FUNÇÃO DE EXCLUSÃO LOCAL AMARRADA DIRETAMENTE AO ESCOPO GLOBAL DO NAVEGADOR
+    window.acaoDeletarTudo = function() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
         mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
-    }
+    };
 </script>
 </body>
 </html>
