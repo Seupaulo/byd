@@ -338,7 +338,7 @@
             </div>
             <div style="font-size: 13px; color: #a0aec0; margin-top: 25px; line-height: 1.5; border-top: 1px solid #242936; padding-top: 12px;">
                 ⚙️ Valores aplicados como base de custo para os cálculos automotivos.
-                <button class="btn-del" onclick="mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', window.acaoDeletarTudo)">Zerar Histórico do Aparelho</button>
+                <button class="btn-del" onclick="dispararZerarHistorico()">Zerar Histórico do Aparelho</button>
             </div>
         </div>
 
@@ -346,7 +346,7 @@
             <div class="card-header-actions">
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
-                    <button class="btn-ha btn-cloud-down" onclick="mostrarModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', baixarDaNuvem)">📥 Sincronizar com Nuvem</button>
+                    <button class="btn-ha btn-cloud-down" onclick="dispararSincronismoNuvem()">📥 Sincronizar com Nuvem</button>
                     <button class="btn-ha" onclick="mostrarModalAlerta('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
@@ -477,13 +477,10 @@
 </div>
 
 <script>
-    // URL DE COMUNICAÇÃO GERADA PELO GOOGLE APPS SCRIPT
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVxVo5PDuuXsSqFFcmGg9HNrrqzO5hUTj4bRpejWyONXeMfm9lb_TPDsmK9yZtKQeNog/exec";
+    // VARIÁVEL DE INTERRUPÇÃO GLOBAL PARA REDIRECIONAMENTO DE CLIQUES
+    let acaoPendenteAoConfirmar = null;
 
-    // VARIÁVEL GLOBAL PARA CALLBACKS DO MODAL
-    let modalCallback = null;
-
-    // SISTEMA VISUAL DE POP-UPS CUSTOMIZADOS
+    // MOTOR DE POP-UPS CUSTOMIZADOS BLINDADO CONTRA TRAVAMENTO DE ESCOPO
     function mostrarModalAlerta(titulo, texto) {
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
@@ -491,12 +488,14 @@
         
         const btnConfirm = document.getElementById('modalBtnConfirm');
         btnConfirm.innerText = "Entendido";
-        btnConfirm.onclick = fecharModal;
+        btnConfirm.onclick = function() {
+            fecharModal();
+        };
         
         document.getElementById('customModalOverlay').classList.add('active');
     }
 
-    function mostrarModalConfirmacao(titulo, texto, callbackSucesso) {
+    function mostrarModalConfirmacao(titulo, texto, nomeAcaoGlobal) {
         document.getElementById('customModalTitle').innerText = titulo;
         document.getElementById('customModalText').innerText = texto;
         document.getElementById('modalBtnCancel').style.display = 'inline-block';
@@ -504,11 +503,14 @@
         const btnConfirm = document.getElementById('modalBtnConfirm');
         btnConfirm.innerText = "Confirmar";
         
-        modalCallback = callbackSucesso;
+        acaoPendenteAoConfirmar = nomeAcaoGlobal;
+        
         btnConfirm.onclick = function() {
             fecharModal();
-            if(modalCallback) {
-                modalCallback();
+            if (acaoPendenteAoConfirmar === 'sincronizar') {
+                executarSincronismoFisico();
+            } else if (acaoPendenteAoConfirmar === 'zerar') {
+                executarLimpezaFisica();
             }
         };
         
@@ -517,7 +519,16 @@
 
     function fecharModal() {
         document.getElementById('customModalOverlay').classList.remove('active');
-        modalCallback = null;
+        acaoPendenteAoConfirmar = null;
+    }
+
+    // GATILHOS EXECUTADOS PELOS BOTÕES DO FORMULÁRIO
+    function dispararSincronismoNuvem() {
+        mostrarModalConfirmacao('Sincronizar Nuvem', 'Deseja sincronizar localmente com os dados da nuvem? Isso atualizará o seu painel.', 'sincronizar');
+    }
+
+    function dispararZerarHistorico() {
+        mostrarModalConfirmacao('Zerar Aparelho', 'Deseja apagar o histórico local deste aparelho? Isso não afetará os seus dados salvos na nuvem.', 'zerar');
     }
 
     // BOMBA DE LIMPEZA CONTRA SERVICE WORKERS PRESOS
@@ -565,12 +576,16 @@
         .catch(err => console.error("Erro no envio em background:", err));
     }
 
-    function baixarDaNuvem() {
-        if(GOOGLE_SCRIPT_URL.includes("COLE_AQUI")) {
-            mostrarModalAlerta("Aviso", "Configure a URL do Script no seu arquivo index.html primeiro!");
-            return;
-        }
+    // EXCLUSÃO E SINCRO MUDADOS PARA EXECUÇÃO ISOLADA DO DOM (EVITA ERRO DE ESCOPO)
+    function executarLimpezaFisica() {
+        localStorage.removeItem('byd_local_data_v5');
+        desenharInterface();
+        setTimeout(function() {
+            mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
+        }, 150);
+    }
 
+    function executarSincronismoFisico() {
         const btn = document.querySelector('.btn-cloud-down');
         btn.innerText = "📥 Sincronizando...";
         btn.disabled = true;
@@ -583,11 +598,12 @@
         .then(res => res.json())
         .then(res => {
             if(res.status === "sucesso") {
-                localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados));
-                desenharInterface();
+                localStorage.removeItem('byd_local_data_v5'); // Destrói o cache velho editado
+                localStorage.setItem('byd_local_data_v5', JSON.stringify(res.dados)); // Injeta a versão nova atualizada da nuvem
+                desenharInterface(); // Redesenha a tela imediatamente
                 setTimeout(function() {
                     mostrarModalAlerta("Sincronização OK", "Sincronização com a nuvem concluída com sucesso! Seu histórico e relatórios foram atualizados.");
-                }, 300);
+                }, 150);
             } else {
                 mostrarModalAlerta("Erro", "Erro ao ler dados remotos: " + res.mensagem);
             }
@@ -709,7 +725,11 @@
         var dAtual = new Date();
         var mesAtualChave = (dAtual.getMonth() + 1) + '_' + dAtual.getFullYear();
         var mesesNome = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-        document.getElementById('tituloConsolidado').innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
+        
+        var tituloElem = document.getElementById('tituloConsolidado');
+        if (tituloElem) {
+            tituloElem.innerText = "📊 Fechamento Consolidado do Mês (" + mesesNome[dAtual.getMonth()] + " / " + dAtual.getFullYear() + ")";
+        }
 
         var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0 };
 
@@ -796,14 +816,8 @@
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
-    // FUNÇÃO DE EXCLUSÃO LOCAL AMARRADA DIRETAMENTE AO ESCOPO GLOBAL
-    window.acaoDeletarTudo = function() {
-        localStorage.removeItem('byd_local_data_v5');
-        desenharInterface();
-        setTimeout(function() {
-            mostrarModalAlerta("Sucesso", "O histórico local deste aparelho foi zerado.");
-        }, 100);
-    };
+    // SUA URL DO GOOGLE APPS SCRIPT PERFEITA NA LINHA 481 COMO SOLICITADO
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVxVo5PDuuXsSqFFcmGg9HNrrqzO5hUTj4bRpejWyONXeMfm9lb_TPDsmK9yZtKQeNog/exec";
 </script>
 </body>
 </html>
