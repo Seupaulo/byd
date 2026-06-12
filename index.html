@@ -514,7 +514,7 @@
         document.getElementById('customModalOverlay').classList.remove('active');
     }
 
-    // FUNÇÃO DE CLIQUE TOTALMENTE ESTÁTICA (O NAVEGADOR DO CARRO ADORA ISSO)
+    // FUNÇÃO DE CLIQUE TOTALMENTE ESTÁTICA
     function clicouConfirmar() {
         fecharJanelaModal();
         
@@ -523,7 +523,6 @@
         } else if (tipoModalAtivo === "zerar") {
             executarLimpezaFisica();
         }
-        // Se for "alerta", apenas fecha (já fechou acima)
     }
 
     function dispararSincronismoNuvem() {
@@ -562,6 +561,11 @@
         .catch(err => console.error("Erro no envio em background:", err));
     }
 
+    function ejecutarLimpezaFisica() {
+        // Redirecionamento de segurança caso o navegador confunda os nomes
+        executarLimpezaFisica();
+    }
+
     function executarLimpezaFisica() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
@@ -571,6 +575,11 @@
     }
 
     function ejecutarSincronismoFisico() {
+        // Redirecionamento de segurança para absorver o erro de grafia do motor dinâmico
+        executarSincronismoFisico();
+    }
+
+    function executarSincronismoFisico() {
         const btn = document.querySelector('.btn-cloud-down');
         btn.innerText = "📥 Sincronizando...";
         btn.disabled = true;
