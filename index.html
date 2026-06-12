@@ -24,27 +24,28 @@
             box-sizing: border-box; 
         }
 
-        /* Título Principal do Aplicativo */
+        /* Título Principal do Aplicativo com Versão na mesma linha */
         .main-title {
             font-size: 26px;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 5px;
+            margin-bottom: 25px;
             text-align: left;
             border-left: 5px solid #00ff9d;
             padding-left: 12px;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
         }
 
-        /* Indicador de Versão solicitado pelo Usuário */
-        .version-tag {
-            font-size: 13px;
+        /* Texto da Versão colado ao Título */
+        .version-inline {
+            font-size: 14px;
             font-weight: 600;
             color: #a0aec0;
-            margin-bottom: 25px;
-            padding-left: 17px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         /* Layout em duas colunas */
@@ -180,21 +181,15 @@
             letter-spacing: 1px;
         }
 
-        .btn-ha {
+        .btn-cloud-down {
             width: auto;
             margin: 0;
             padding: 8px 14px;
-            background: #2d3748;
-            border: 1px solid #4a5568;
             font-size: 13px;
             border-radius: 6px;
-            box-shadow: none;
-            color: #e2e8f0;
-        }
-
-        .btn-cloud-down {
             background: #022c22;
             border: 1px solid #10b981;
+            box-shadow: none;
         }
 
         /* HISTÓRICO E SEÇÕES DA PÁGINA */
@@ -329,8 +324,9 @@
 
 <div class="wrapper">
     
-    <div class="main-title">Controle de Carregamento da Bateria</div>
-    <div class="version-tag">Versão V2.0</div>
+    <div class="main-title">
+        Controle de Carregamento da Bateria <span class="version-inline">V2.0</span>
+    </div>
     
     <div class="dashboard-grid">
         
@@ -359,7 +355,6 @@
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
                     <button class="btn-cloud-down" onclick="dispararSincronismoNuvem()">📥 Sincronizar com Nuvem</button>
-                    <button class="btn-ha" onclick="abrirModalAlertaFixo('Aviso', 'Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
             
@@ -489,7 +484,7 @@
 </div>
 
 <script>
-    // ESTADO FIXO DE CONTROLE (MÁQUINA DE ESTADOS - REJEITA ERRO DE ESCOPO DINÂMICO)
+    // ESTADO FIXO DE CONTROLE (MÁQUINA DE ESTADOS)
     let tipoModalAtivo = "alerta"; // alerta, sincronizar, zerar
 
     function abrirModalAlertaFixo(titulo, texto) {
@@ -561,22 +556,12 @@
         .catch(err => console.error("Erro no envio em background:", err));
     }
 
-    function ejecutarLimpezaFisica() {
-        // Redirecionamento de segurança caso o navegador confunda os nomes
-        executarLimpezaFisica();
-    }
-
     function executarLimpezaFisica() {
         localStorage.removeItem('byd_local_data_v5');
         desenharInterface();
         setTimeout(function() {
             abrirModalAlertaFixo("Sucesso", "O histórico local deste aparelho foi zerado.");
         }, 150);
-    }
-
-    function ejecutarSincronismoFisico() {
-        // Redirecionamento de segurança para absorver o erro de grafia do motor dinâmico
-        executarSincronismoFisico();
     }
 
     function executarSincronismoFisico() {
@@ -822,7 +807,7 @@
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
     }
 
-    // SUA URL DO GOOGLE APPS SCRIPT NA LINHA 482
+    // SUA URL DO GOOGLE APPS SCRIPT NA LINHA 467
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVxVo5PDuuXsSqFFcmGg9HNrrqzO5hUTj4bRpejWyONXeMfm9lb_TPDsmK9yZtKQeNog/exec";
 </script>
 </body>
