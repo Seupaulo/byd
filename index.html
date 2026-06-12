@@ -306,7 +306,7 @@
         <!-- COLUNA ESQUERDA: VALOR DO KWH -->
         <div class="card" style="border-top: 4px solid #38bdf8;">
             <div>
-                <h3>⚡ Valor do KWH</h3>
+                <h3>⚡ Valor do KWh</h3>
                 
                 <div class="input-group">
                     <label>Carga Lenta AC (R$):</label>
@@ -329,8 +329,8 @@
             <div class="card-header-actions">
                 <h3>🔋 Novo Registro de Recarga</h3>
                 <div class="actions-group">
-                    <button class="btn-ha btn-cloud-down" onclick="baixarDaNuvem()">📥 Baixar da Planilha</button>
-                    <button class="btn-ha" onclick="alert('Modo Design: Integração HA pausada para testes de nuvem.')">🔄 Sincronizar HA</button>
+                    <button class="btn-ha btn-cloud-down" onclick="baixarDaNuvem()">📥 Sincronizar com a Nuvem</button>
+                    <button class="btn-ha" onclick="alert('Não Implantado Ainda.')">🔄 Sincronizar HA</button>
                 </div>
             </div>
             
@@ -530,7 +530,7 @@
                 var dadosInvertidos = res.dados.reverse();
                 localStorage.setItem('byd_local_data_v5', JSON.stringify(dadosInvertidos));
                 desenharInterface();
-                alert("📊 Histórico sincronizado com sucesso direto do Google Sheets!");
+                alert("📊 Histórico sincronizado com sucesso!");
             } else {
                 alert("Erro ao ler da planilha: " + res.mensagem);
             }
