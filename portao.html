@@ -6,20 +6,11 @@
   <title>Controle do Portão</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      min-height: 100vh;
-      background: #0d0d0d;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #f0f0f0;
-      padding: 24px 16px 48px;
-    }
+    body { min-height:100vh; background:#0d0d0d; display:flex; flex-direction:column; align-items:center; font-family:'Segoe UI',system-ui,sans-serif; color:#f0f0f0; padding:24px 16px 48px; }
     h1 { font-size:1.1rem; font-weight:400; letter-spacing:0.2em; text-transform:uppercase; color:#888; margin:32px 0 28px; }
     .panel { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:16px; padding:24px; width:100%; max-width:480px; margin-bottom:16px; }
     .panel h2 { font-size:0.78rem; letter-spacing:0.15em; text-transform:uppercase; color:#555; margin-bottom:18px; }
-    label { display:block; font-size:0.75rem; color:#666; margin:12px 0 4px; letter-spacing:0.04em; }
+    label { display:block; font-size:0.75rem; color:#666; margin:12px 0 4px; }
     input, select { width:100%; background:#111; border:1px solid #2e2e2e; border-radius:8px; color:#f0f0f0; font-size:0.88rem; padding:9px 12px; outline:none; transition:border-color 0.2s; }
     input:focus, select:focus { border-color:#25a855; }
     small { color:#444; font-size:0.7rem; margin-top:3px; display:block; }
@@ -93,19 +84,18 @@
   <small>Tuya IoT Platform → Device → Function → DP Code</small>
 
   <label>Valor para ABRIR</label>
-  <input type="text" id="valOpen" placeholder='Ex: true  ou  "open"' />
+  <input type="text" id="valOpen" placeholder='Ex: true ou "open"' />
 
   <label>Valor para FECHAR</label>
-  <input type="text" id="valClose" placeholder='Ex: false  ou  "close"' />
+  <input type="text" id="valClose" placeholder='Ex: false ou "close"' />
 
   <div class="proxy-box">
     <div class="ph">🔀 Proxy CORS</div>
     <select id="proxyMode">
-      <option value="corssh">proxy.cors.sh (sem cache) ⭐</option>
+      <option value="corssh">proxy.cors.sh — sem cache ⭐</option>
       <option value="corsproxy">corsproxy.io</option>
       <option value="thingproxy">thingproxy.freeboard.io</option>
       <option value="allorigins">allorigins.win</option>
-      <option value="none">Sem proxy</option>
       <option value="none">Sem proxy</option>
     </select>
     <div class="proxy-note">Necessário para contornar bloqueio CORS do navegador.</div>
@@ -145,186 +135,184 @@
 
 <script>
 // ── Logger ────────────────────────────────────────────────────────────────────
-function nowStr() { return new Date().toLocaleTimeString('pt-BR',{hour12:false}); }
+function nowStr() { return new Date().toLocaleTimeString('pt-BR', {hour12:false}); }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function log(msg, cls='li') {
-  const box = document.getElementById('log-box');
-  const d = document.createElement('div');
+function log(msg, cls) {
+  cls = cls || 'li';
+  var box = document.getElementById('log-box');
+  var d = document.createElement('div');
   d.className = 'le';
-  d.innerHTML = `<span class="lt">${nowStr()}</span><span class="${cls}">${esc(msg)}</span>`;
-  box.appendChild(d); box.scrollTop = box.scrollHeight;
+  d.innerHTML = '<span class="lt">'+nowStr()+'</span><span class="'+cls+'">'+esc(msg)+'</span>';
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
 }
 function logJson(label, obj) {
   log(label+':', 'ld');
-  const box = document.getElementById('log-box');
-  JSON.stringify(obj,null,2).split('\n').forEach(l => {
-    const d = document.createElement('div'); d.className='le';
-    d.innerHTML = `<span class="ld">&nbsp;&nbsp;${esc(l)}</span>`;
+  var box = document.getElementById('log-box');
+  var lines = JSON.stringify(obj, null, 2).split('\n');
+  for (var i=0; i<lines.length; i++) {
+    var d = document.createElement('div');
+    d.className = 'le';
+    d.innerHTML = '<span class="ld">&nbsp;&nbsp;'+esc(lines[i])+'</span>';
     box.appendChild(d);
-  });
-  document.getElementById('log-box').scrollTop = 9999;
+  }
+  box.scrollTop = box.scrollHeight;
 }
 function logSep() {
-  const box = document.getElementById('log-box');
-  const d = document.createElement('div'); d.className='le ls';
-  d.textContent='─'.repeat(52); box.appendChild(d); box.scrollTop=box.scrollHeight;
+  var box = document.getElementById('log-box');
+  var d = document.createElement('div');
+  d.className = 'le ls';
+  d.textContent = Array(53).join('─');
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
 }
 function clearLog() {
-  document.getElementById('log-box').innerHTML='<div class="le ld">Log limpo.</div>';
-function proxify(url) {
-  const m = cfg("proxyMode");
-  if (m==="corsproxy")   return `https://corsproxy.io/?${encodeURIComponent(url)}`;
-  if (m==="allorigins")  return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  if (m==="corssh")      return `https://proxy.cors.sh/${url}`;
-  if (m==="thingproxy")  return `https://thingproxy.freeboard.io/fetch/${url}`;
-  return url;
+  document.getElementById('log-box').innerHTML = '<div class="le ld">Log limpo.</div>';
 }
-  if (m==='allorigins') return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+// ── Proxy ─────────────────────────────────────────────────────────────────────
+function proxify(url) {
+  var m = cfg('proxyMode');
+  if (m === 'corsproxy')  return 'https://corsproxy.io/?' + encodeURIComponent(url);
+  if (m === 'allorigins') return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+  if (m === 'corssh')     return 'https://proxy.cors.sh/' + url;
+  if (m === 'thingproxy') return 'https://thingproxy.freeboard.io/fetch/' + url;
   return url;
 }
 
 // ── Fetch com log ─────────────────────────────────────────────────────────────
-async function fetchWithLog(step, url, options={}) {
-  const purl = proxify(url);
-  log(`[${step}] ${options.method||'GET'} → ${url}`, 'li');
-  if (purl !== url) log(`[${step}] via proxy: ${purl.split('?')[0]}`, 'ld');
+async function fetchWithLog(step, url, options) {
+  options = options || {};
+  var purl = proxify(url);
+  log('['+step+'] '+(options.method||'GET')+' → '+url, 'li');
+  if (purl !== url) log('['+step+'] via proxy: '+purl.split('?')[0].replace('https://proxy.cors.sh/','https://proxy.cors.sh/'), 'ld');
 
-  let res, text;
+  var res, text;
   try {
     res  = await fetch(purl, options);
     text = await res.text();
   } catch(err) {
-    log(`[${step}] ✗ Falha de rede: ${err.name} – ${err.message}`, 'ler');
-    if (err.name==='TypeError') log(`[${step}] → CORS ou sem internet. Tente outro proxy.`, 'lw');
+    log('['+step+'] ✗ Falha de rede: '+err.name+' – '+err.message, 'ler');
+    if (err.name === 'TypeError') log('['+step+'] → CORS ou sem internet. Tente outro proxy.', 'lw');
     throw err;
   }
 
-  log(`[${step}] HTTP ${res.status} ${res.statusText}`, res.ok?'li':'lw');
-  let data;
+  log('['+step+'] HTTP '+res.status+' '+res.statusText, res.ok ? 'li' : 'lw');
+  var data;
   try {
     data = JSON.parse(text);
-    logJson(`[${step}] Resposta`, data);
-  } catch {
-    log(`[${step}] Resposta (não-JSON): ${text.slice(0,300)}`, 'ld');
-    throw new Error('Resposta inválida do servidor. Verifique o proxy ou a região.');
+    logJson('['+step+'] Resposta', data);
+  } catch(e) {
+    log('['+step+'] Resposta (não-JSON): '+text.slice(0,300), 'ld');
+    throw new Error('Resposta inválida. Verifique o proxy ou a região.');
   }
   return data;
 }
 
 // ── Cripto ────────────────────────────────────────────────────────────────────
 async function sha256Hex(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
 }
 async function hmacSHA256(key, msg) {
-  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
-  const s = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg));
-  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  var k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  var s = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(s)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
 }
 function parseValue(v) {
   v = v.trim();
-  if (v==='true')  return true;
-  if (v==='false') return false;
-  const n = Number(v);
-  if (!isNaN(n) && v!=='') return n;
-  if ((v.startsWith('"')&&v.endsWith('"'))||(v.startsWith("'")&&v.endsWith("'"))) return v.slice(1,-1);
+  if (v === 'true')  return true;
+  if (v === 'false') return false;
+  var n = Number(v);
+  if (!isNaN(n) && v !== '') return n;
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) return v.slice(1,-1);
   return v;
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
 function cfg(k) { return document.getElementById(k).value.trim(); }
 function saveConfig() {
-  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode']
-    .forEach(k => localStorage.setItem('tuyaCtrl_'+k, document.getElementById(k).value));
-  log('Configuração salva.', 'lok'); setStatus('✓ Salvo!','ok');
+  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode'].forEach(function(k) {
+    localStorage.setItem('tuyaCtrl_'+k, document.getElementById(k).value);
+  });
+  log('Configuração salva.', 'lok');
+  setStatus('✓ Salvo!', 'ok');
 }
 function loadConfig() {
-  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode'].forEach(k=>{
-    const v = localStorage.getItem('tuyaCtrl_'+k);
-    if (v!==null) document.getElementById(k).value = v;
+  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode'].forEach(function(k) {
+    var v = localStorage.getItem('tuyaCtrl_'+k);
+    if (v !== null) document.getElementById(k).value = v;
   });
 }
 function toggleConfig() {
-  const p=document.getElementById('config-panel'), b=document.getElementById('toggleBtn');
-  if (p.style.display==='none') { p.style.display='block'; b.textContent='Ocultar configuração'; }
+  var p = document.getElementById('config-panel');
+  var b = document.getElementById('toggleBtn');
+  if (p.style.display === 'none') { p.style.display='block'; b.textContent='Ocultar configuração'; }
   else { p.style.display='none'; b.textContent='Mostrar configuração'; }
 }
 
-// ── Tuya API — assinatura correta (novo algoritmo pós-Jun/2021) ───────────────
-//
-//  TOKEN (sem access_token):
-//    stringToSign = "GET\n" + sha256("") + "\n\n" + "/v1.0/token?grant_type=1"
-//    str          = clientId + t + nonce + stringToSign
-//    sign         = HMAC-SHA256(str, secret).toUpperCase()
-//
-//  COMANDO (com access_token):
-//    stringToSign = "POST\n" + sha256(body) + "\n\n" + path
-//    str          = clientId + access_token + t + nonce + stringToSign
-//    sign         = HMAC-SHA256(str, secret).toUpperCase()
+// ── Tuya API ──────────────────────────────────────────────────────────────────
+// Assinatura nova (pós Jun/2021):
+//   TOKEN:   str = clientId + t + nonce + "GET\n" + sha256("") + "\n\n" + path
+//   COMANDO: str = clientId + token + t + nonce + "POST\n" + sha256(body) + "\n\n" + path
+//   sign = HMAC-SHA256(str, secret).toUpperCase()
 
 async function getToken() {
-  const clientId     = cfg('clientId');
-  const clientSecret = cfg('clientSecret');
-  const baseUrl      = cfg('region');
-  const t            = Date.now().toString();
-  const nonce        = '';
-  const tokenPath    = '/v1.0/token?grant_type=1';
-  const emptyHash    = await sha256Hex('');
+  var clientId     = cfg('clientId');
+  var clientSecret = cfg('clientSecret');
+  var baseUrl      = cfg('region');
+  var t            = Date.now().toString();
+  var nonce        = '';
+  var tokenPath    = '/v1.0/token?grant_type=1';
+  var emptyHash    = await sha256Hex('');
+  var stringToSign = 'GET\n' + emptyHash + '\n\n' + tokenPath;
+  var strForSign   = clientId + t + nonce + stringToSign;
+  var sign         = (await hmacSHA256(clientSecret, strForSign)).toUpperCase();
 
-  const stringToSign = `GET\n${emptyHash}\n\n${tokenPath}`;
-  const strForSign   = clientId + t + nonce + stringToSign;
-  const sign         = (await hmacSHA256(clientSecret, strForSign)).toUpperCase();
+  log('[1] clientId (6 primeiros): '+clientId.slice(0,6), 'ld');
+  log('[1] t: '+t, 'ld');
+  log('[1] stringToSign: GET\\n<emptyHash>\\n\\n'+tokenPath, 'ld');
 
-  log(`[1] stringToSign = GET\\n<emptyHash>\\n\\n${tokenPath}`, 'ld');
-  log(`[1] str = clientId + t + nonce + stringToSign`, 'ld');
-  log(`[1] clientId (6 primeiros): ${clientId.slice(0,6)}`, 'ld');
-  log(`[1] t usado na assinatura: ${t}`, 'ld');
-
-  const data = await fetchWithLog('1', `${baseUrl}${tokenPath}`, {
+  var data = await fetchWithLog('1', baseUrl+tokenPath, {
     headers: {
-      'client_id':     clientId,
-      'sign':          sign,
-      'sign_method':   'HMAC-SHA256',
-      't':             t,
-      'nonce':         nonce,
-      'Cache-Control': 'no-cache, no-store',
-      'Pragma':        'no-cache',
+      'client_id':   clientId,
+      'sign':        sign,
+      'sign_method': 'HMAC-SHA256',
+      't':           t,
+      'nonce':       nonce
     }
   });
 
-  if (!data.success) throw new Error(`Token: ${data.msg} (code ${data.code})`);
-  log(`[1] ✓ Token obtido!`, 'lok');
+  if (!data.success) throw new Error('Token: '+data.msg+' (code '+data.code+')');
+  log('[1] ✓ Token obtido! t da resposta: '+data.t, 'lok');
   return data.result.access_token;
 }
 
 async function sendTuyaCommand(action) {
-  const clientId     = cfg('clientId');
-  const clientSecret = cfg('clientSecret');
-  const deviceId     = cfg('deviceId');
-  const baseUrl      = cfg('region');
-  const dpCode       = cfg('dpCode') || 'switch_1';
-  const rawVal       = action==='open' ? cfg('valOpen') : cfg('valClose');
-  const value        = parseValue(rawVal || (action==='open' ? 'true' : 'false'));
+  var clientId     = cfg('clientId');
+  var clientSecret = cfg('clientSecret');
+  var deviceId     = cfg('deviceId');
+  var baseUrl      = cfg('region');
+  var dpCode       = cfg('dpCode') || 'switch_1';
+  var rawVal       = action === 'open' ? cfg('valOpen') : cfg('valClose');
+  var value        = parseValue(rawVal || (action === 'open' ? 'true' : 'false'));
 
-  log(`Ação: ${action.toUpperCase()} | dpCode=${dpCode} | value=${JSON.stringify(value)}`, 'li');
+  log('Ação: '+action.toUpperCase()+' | dpCode='+dpCode+' | value='+JSON.stringify(value), 'li');
 
-  const token     = await getToken();
-  const cmdPath   = `/v1.0/devices/${deviceId}/commands`;
-  const body      = JSON.stringify({ commands: [{ code: dpCode, value }] });
-  const t         = Date.now().toString();
-  const nonce     = '';
-  const bodyHash  = await sha256Hex(body);
+  var token     = await getToken();
+  var cmdPath   = '/v1.0/devices/'+deviceId+'/commands';
+  var body      = JSON.stringify({ commands: [{ code: dpCode, value: value }] });
+  var t         = Date.now().toString();
+  var nonce     = '';
+  var bodyHash  = await sha256Hex(body);
+  var stringToSign = 'POST\n' + bodyHash + '\n\n' + cmdPath;
+  var strForSign   = clientId + token + t + nonce + stringToSign;
+  var sign         = (await hmacSHA256(clientSecret, strForSign)).toUpperCase();
 
-  // stringToSign correto para comando
-  const stringToSign = `POST\n${bodyHash}\n\n${cmdPath}`;
-  const strForSign   = clientId + token + t + nonce + stringToSign;
-  const sign         = (await hmacSHA256(clientSecret, strForSign)).toUpperCase();
+  log('[2] stringToSign: POST\\n<bodyHash>\\n\\n'+cmdPath, 'ld');
+  logJson('[2] Body', { commands: [{ code: dpCode, value: value }] });
 
-  log(`[2] stringToSign = POST\\n<bodyHash>\\n\\n${cmdPath}`, 'ld');
-  log(`[2] str = clientId + token + t + nonce + stringToSign`, 'ld');
-  logJson('[2] Body', { commands:[{ code:dpCode, value }] });
-
-  const data = await fetchWithLog('2', `${baseUrl}${cmdPath}`, {
+  var data = await fetchWithLog('2', baseUrl+cmdPath, {
     method: 'POST',
     headers: {
       'client_id':    clientId,
@@ -333,48 +321,54 @@ async function sendTuyaCommand(action) {
       'sign_method':  'HMAC-SHA256',
       't':            t,
       'nonce':        nonce,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
-    body
+    body: body
   });
 
-  if (!data.success) throw new Error(`Comando: ${data.msg} (code ${data.code})`);
-  log(`[2] ✓ Comando aceito!`, 'lok');
+  if (!data.success) throw new Error('Comando: '+data.msg+' (code '+data.code+')');
+  log('[2] ✓ Comando aceito!', 'lok');
   return data;
 }
 
 // ── UI ────────────────────────────────────────────────────────────────────────
-function setStatus(msg, type='') {
-  const el=document.getElementById('status'); el.textContent=msg; el.className=type;
+function setStatus(msg, type) {
+  var el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = type || '';
 }
 function setLoading(btnId, on) {
-  const btn=document.getElementById(btnId), other=btnId==='btnOpen'?'btnClose':'btnOpen';
+  var btn = document.getElementById(btnId);
+  var other = btnId === 'btnOpen' ? 'btnClose' : 'btnOpen';
   if (on) { btn.classList.add('loading'); btn.disabled=true; document.getElementById(other).disabled=true; }
   else    { btn.classList.remove('loading'); btn.disabled=false; document.getElementById(other).disabled=false; }
 }
 async function sendCommand(action) {
-  if (!cfg('clientId')||!cfg('clientSecret')||!cfg('deviceId')) {
-    setStatus('⚠ Preencha e salve as credenciais.','err');
-    log('Tentativa sem credenciais completas.','lw'); return;
+  if (!cfg('clientId') || !cfg('clientSecret') || !cfg('deviceId')) {
+    setStatus('⚠ Preencha e salve as credenciais.', 'err');
+    log('Tentativa sem credenciais.', 'lw');
+    return;
   }
   logSep();
-  const btnId = action==='open'?'btnOpen':'btnClose';
-  setLoading(btnId,true); setStatus('Enviando comando…');
+  var btnId = action === 'open' ? 'btnOpen' : 'btnClose';
+  setLoading(btnId, true);
+  setStatus('Enviando comando…');
   try {
     await sendTuyaCommand(action);
-    setStatus(action==='open'?'✓ Portão abrindo!':'✓ Portão fechando!','ok');
-    log('✓ Concluído com sucesso.','lok');
+    setStatus(action === 'open' ? '✓ Portão abrindo!' : '✓ Portão fechando!', 'ok');
+    log('✓ Concluído com sucesso.', 'lok');
   } catch(e) {
-    setStatus('✗ Erro: '+e.message,'err');
-    log('✗ '+e.message,'ler');
+    setStatus('✗ Erro: '+e.message, 'err');
+    log('✗ '+e.message, 'ler');
   } finally {
-    setLoading(btnId,false); logSep();
+    setLoading(btnId, false);
+    logSep();
   }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadConfig();
-log('Página iniciada. Proxy: '+(cfg('proxyMode')||'corsproxy'),'li');
+log('Página iniciada. Proxy: '+(cfg('proxyMode')||'corssh'), 'li');
 </script>
 </body>
 </html>
