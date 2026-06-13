@@ -101,8 +101,11 @@
   <div class="proxy-box">
     <div class="ph">🔀 Proxy CORS</div>
     <select id="proxyMode">
-      <option value="corsproxy">corsproxy.io (recomendado)</option>
+      <option value="corssh">proxy.cors.sh (sem cache) ⭐</option>
+      <option value="corsproxy">corsproxy.io</option>
+      <option value="thingproxy">thingproxy.freeboard.io</option>
       <option value="allorigins">allorigins.win</option>
+      <option value="none">Sem proxy</option>
       <option value="none">Sem proxy</option>
     </select>
     <div class="proxy-note">Necessário para contornar bloqueio CORS do navegador.</div>
@@ -168,12 +171,14 @@ function logSep() {
 }
 function clearLog() {
   document.getElementById('log-box').innerHTML='<div class="le ld">Log limpo.</div>';
-}
-
-// ── Proxy ─────────────────────────────────────────────────────────────────────
 function proxify(url) {
-  const m = cfg('proxyMode');
-  if (m==='corsproxy')  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  const m = cfg("proxyMode");
+  if (m==="corsproxy")   return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  if (m==="allorigins")  return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  if (m==="corssh")      return `https://proxy.cors.sh/${url}`;
+  if (m==="thingproxy")  return `https://thingproxy.freeboard.io/fetch/${url}`;
+  return url;
+}
   if (m==='allorigins') return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
   return url;
 }
