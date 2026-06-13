@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cockpit Dolphin Mini</title>
+    <style>
+        :root {
+            --bg-color: #121214;
+            --card-bg: #1a1a1e;
+            --accent-color: #00ADB5;
+            --text-color: #EEEEEE;
+            --text-secondary: #7A7A80;
+            --success: #4E9F3D;
+            --danger: #D92027;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding: 15px; display: flex; flex-direction: column; height: 100vh; justify-content: space-between; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px 10px; }
+        .header h1 { font-size: 1.2rem; font-weight: 600; color: var(--accent-color); }
+        
+        /* Grid de Botões Principais */
+        .grid-comandos { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 10px 0; }
+        .btn-card { background: var(--card-bg); border: 2px solid #2a2a30; border-radius: 12px; padding: 20px; text-align: center; color: var(--text-color); cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        .btn-card:active { transform: scale(0.98); border-color: var(--accent-color); }
+        .btn-card .icon { font-size: 2rem; }
+        .btn-card .label { font-size: 1rem; font-weight: bold; }
+
+        /* Teclado PIN Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 100; }
+        .pin-box { background: var(--card-bg); border-radius: 16px; padding: 20px; width: 280px; text-align: center; border: 1px solid #2a2a30; }
+        .pin-box h3 { font-size: 1rem; margin-bottom: 10px; color: var(--text-secondary); }
+        .pin-display { background: #0f0f11; border-radius: 8px; padding: 10px; font-size: 1.5rem; letter-spacing: 5px; margin-bottom: 15px; font-weight: bold; height: 45px; color: var(--accent-color); }
+        .teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .btn-tecla { background: #222226; border: none; border-radius: 8px; padding: 15px; color: var(--text-color); font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        .btn-tecla:active { background: var(--accent-color); }
+
+        /* Barra de Status Inferior */
+        .statusbar { background: var(--card-bg); border-radius: 8px; padding: 12px; text-align: center; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); border-top: 2px solid #2a2a30; }
+        .statusbar.sucesso { border-top-color: var(--success); color: var(--success); }
+        .statusbar.erro { border-top-color: var(--danger); color: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>COCKPIT DOLPHIN</h1>
+    </div>
+
+    <!-- BOTÕES DE CONTROLE -->
+    <div class="grid-comandos">
+        <div class="btn-card" onclick="solicitarPin('ID_DA_CENA_ABRIR_PORTAO')">
+            <span class="icon">🚪</span>
+            <span class="label">Abrir Portão</span>
+        </div>
+        <div class="btn-card" onclick="dispararSemPin('ID_DA_CENA_FECHAR_PORTAO')">
+            <span class="icon">🔒</span>
+            <span class="label">Fechar Portão</span>
+        </div>
+        <div class="btn-card" onclick="solicitarPin('ID_DA_CENA_DESARMAR_ALARME')">
+            <span class="icon">🔓</span>
+            <span class="label">Desarmar Alarme</span>
+        </div>
+        <div class="btn-card" onclick="dispararSemPin('ID_DA_CENA_ARMAR_ALARME')">
+            <span class="icon">🚨</span>
+            <span class="label">Armar Alarme</span>
+        </div>
+    </div>
+
+    <!-- MODAL DO TECLADO PIN -->
+    <div class="modal" id="modalPin">
+        <div class="pin-box">
+            <h3 id="modalTitulo">Digite o PIN</h3>
+            <div class="pin-display" id="pinDisplay"></div>
+            <div class="teclado">
+                <button class="btn-tecla" onclick="digito(1)">1</button>
+                <button class="btn-tecla" onclick="digito(2)">2</button>
+                <button class="btn-tecla" onclick="digito(3)">3</button>
+                <button class="btn-tecla" onclick="digito(4)">4</button>
+                <button class="btn-tecla" onclick="digito(5)">5</button>
+                <button class="btn-tecla" onclick="digito(6)">6</button>
+                <button class="btn-tecla" onclick="digito(7)">7</button>
+                <button class="btn-tecla" onclick="digito(8)">8</button>
+                <button class="btn-tecla" onclick="digito(9)">9</button>
+                <button class="btn-tecla" style="color:var(--danger)" onclick="limparPin()">C</button>
+                <button class="btn-tecla" onclick="digito(0)">0</button>
+                <button class="btn-tecla" style="color:var(--danger)" onclick="fecharModal()">X</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RETORNO DE MENSAGENS -->
+    <div class="statusbar" id="status">Painel pronto para comandos.</div>
+
+    <script>
+        // =========================================================================
+        // INSIRA SUA URL DO GOOGLE APPS SCRIPT ENTRE AS ASPAS ABAIXO:
+        // =========================================================================
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyedwww3ZO6BbHygje8ulYd4s_NcjFRgQsUWggE7tsRIz8XCcYv8Z_w4083zuM1uTU/exec";
+
+        let pinAtual = "";
+        let cenaPendente = "";
+
+        function atualizarStatus(texto, tipo = "") {
+            const statusBox = document.getElementById("status");
+            statusBox.innerText = texto;
+            statusBox.className = "statusbar " + tipo;
+        }
+
+        function solicitarPin(cenaId) {
+            cenaPendente = cenaId;
+            pinAtual = "";
+            document.getElementById("pinDisplay").innerText = "";
+            document.getElementById("modalPin").style.display = "flex";
+        }
+
+        function fecharModal() {
+            document.getElementById("modalPin").style.display = "none";
+        }
+
+        function digito(num) {
+            if (pinAtual.length < 4) {
+                pinAtual += num;
+                document.getElementById("pinDisplay").innerText = "*".repeat(pinAtual.length);
+                if (pinAtual.length === 4) {
+                    fecharModal();
+                    enviarComando(cenaPendente, pinAtual);
+                }
+            }
+        }
+
+        function limparPin() {
+            pinAtual = "";
+            document.getElementById("pinDisplay").innerText = "";
+        }
+
+        function dispararSemPin(cenaId) {
+            enviarComando(cenaId, "LIVRE");
+        }
+
+        function enviarComando(cenaId, pinEnviado) {
+            atualizarStatus("Enviando comando...", "");
+            
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // Garante o envio sem problemas de CORS no Google
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    acao: "executar_cena",
+                    pin: pinEnviado,
+                    cenaId: cenaId
+                })
+            })
+            .then(() => {
+                // Como usamos no-cors, o fetch não lê o JSON de retorno direto,
+                // mas se o sinal foi enviado, damos o feedback positivo.
+                atualizarStatus("Comando enviado com sucesso!", "sucesso");
+            })
+            .catch(err => {
+                atualizarStatus("Erro na comunicação com o servidor.", "erro");
+            });
+        }
+    </script>
+</body>
+</html>
