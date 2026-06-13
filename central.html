@@ -51,14 +51,14 @@
 
     <!-- BOTÕES DE CONTROLE -->
     <div class="grid-comandos">
-        <div class="btn-card" onclick="solicitarPin('ID_DA_CENA_ABRIR_PORTAO')">
-            <span class="icon">🚪</span>
-            <span class="label">Abrir Portão</span>
-        </div>
-        <div class="btn-card" onclick="dispararSemPin('ID_DA_CENA_FECHAR_PORTAO')">
-            <span class="icon">🔒</span>
-            <span class="label">Fechar Portão</span>
-        </div>
+       <div class="btn-card" onclick="solicitarPin('disarmed')">
+    <span class="icon">🔓</span>
+    <span class="label">Desarmar Alarme</span>
+</div>
+<div class="btn-card" onclick="dispararSemPin('arm')">
+    <span class="icon">🚨</span>
+    <span class="label">Armar Alarme</span>
+</div>
         <div class="btn-card" onclick="solicitarPin('ID_DA_CENA_DESARMAR_ALARME')">
             <span class="icon">🔓</span>
             <span class="label">Desarmar Alarme</span>
