@@ -264,24 +264,26 @@ async function getToken() {
   const t            = Date.now().toString();
   const nonce        = '';
   const tokenPath    = '/v1.0/token?grant_type=1';
-  const tokenUrl     = `${baseUrl}${tokenPath}&_=${Date.now()}`; // cache-bust só na URL real
   const emptyHash    = await sha256Hex('');
 
-  // Assinatura usa path limpo (sem cache-buster)
   const stringToSign = `GET\n${emptyHash}\n\n${tokenPath}`;
   const strForSign   = clientId + t + nonce + stringToSign;
   const sign         = (await hmacSHA256(clientSecret, strForSign)).toUpperCase();
 
   log(`[1] stringToSign = GET\\n<emptyHash>\\n\\n${tokenPath}`, 'ld');
   log(`[1] str = clientId + t + nonce + stringToSign`, 'ld');
+  log(`[1] clientId (6 primeiros): ${clientId.slice(0,6)}`, 'ld');
+  log(`[1] t usado na assinatura: ${t}`, 'ld');
 
-  const data = await fetchWithLog('1', tokenUrl, {
+  const data = await fetchWithLog('1', `${baseUrl}${tokenPath}`, {
     headers: {
-      'client_id':   clientId,
-      'sign':        sign,
-      'sign_method': 'HMAC-SHA256',
-      't':           t,
-      'nonce':       nonce,
+      'client_id':     clientId,
+      'sign':          sign,
+      'sign_method':   'HMAC-SHA256',
+      't':             t,
+      'nonce':         nonce,
+      'Cache-Control': 'no-cache, no-store',
+      'Pragma':        'no-cache',
     }
   });
 
