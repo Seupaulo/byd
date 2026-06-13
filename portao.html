@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Controle do Portão</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #0d0d0d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #f0f0f0;
+      padding: 24px 16px 48px;
+    }
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #888;
+      margin: 32px 0 28px;
+    }
+    .panel {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      margin-bottom: 16px;
+    }
+    .panel h2 {
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 18px;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: #666;
+      margin: 12px 0 4px;
+      letter-spacing: 0.04em;
+    }
+    input, select {
+      width: 100%;
+      background: #111;
+      border: 1px solid #2e2e2e;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.88rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus { border-color: #25a855; }
+    small { color: #444; font-size: 0.7rem; margin-top: 3px; display: block; }
+    .save-btn {
+      margin-top: 18px;
+      width: 100%;
+      padding: 11px;
+      background: #25a855;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.2s;
+    }
+    .save-btn:hover { filter: brightness(1.1); }
+    .toggle-btn {
+      font-size: 0.74rem;
+      cursor: pointer;
+      margin-bottom: 14px;
+      background: none;
+      border: none;
+      color: #444;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .toggle-btn:hover { color: #777; }
+
+    /* proxy selector */
+    .proxy-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .proxy-row label { margin: 0; white-space: nowrap; flex-shrink: 0; }
+    .proxy-row select { flex: 1; }
+    .proxy-status {
+      font-size: 0.7rem;
+      margin-top: 5px;
+      color: #555;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 8px 0;
+    }
+    .btn {
+      width: 148px;
+      height: 148px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: transform 0.12s, filter 0.12s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn:active { transform: scale(0.94); }
+    .btn svg { width: 44px; height: 44px; }
+    .btn-open {
+      background: linear-gradient(145deg, #1a7a3c, #25a855);
+      box-shadow: 0 8px 28px rgba(37,168,85,0.3);
+      color: #fff;
+    }
+    .btn-open:hover { filter: brightness(1.1); }
+    .btn-close {
+      background: linear-gradient(145deg, #7a1a1a, #c0392b);
+      box-shadow: 0 8px 28px rgba(192,57,43,0.3);
+      color: #fff;
+    }
+    .btn-close:hover { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .spinner {
+      display: none;
+      width: 26px; height: 26px;
+      border: 3px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      position: absolute;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn.loading .spinner   { display: block; }
+    .btn.loading .btn-content { opacity: 0; }
+
+    #status {
+      margin: 18px 0 4px;
+      font-size: 0.88rem;
+      color: #555;
+      min-height: 22px;
+      text-align: center;
+    }
+    #status.ok  { color: #25a855; }
+    #status.err { color: #e74c3c; }
+
+    /* Log */
+    #log-panel { width: 100%; max-width: 480px; margin-top: 20px; }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .log-header span { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: #444; }
+    .log-clear {
+      font-size: 0.7rem;
+      background: none;
+      border: 1px solid #2a2a2a;
+      color: #444;
+      border-radius: 6px;
+      padding: 3px 9px;
+      cursor: pointer;
+    }
+    .log-clear:hover { color: #888; border-color: #444; }
+    #log-box {
+      background: #0a0a0a;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 14px;
+      height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.73rem;
+      line-height: 1.65;
+      scroll-behavior: smooth;
+    }
+    #log-box::-webkit-scrollbar { width: 4px; }
+    #log-box::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+    .log-entry { margin-bottom: 1px; word-break: break-all; }
+    .log-time  { color: #2e2e2e; margin-right: 6px; }
+    .log-info  { color: #4a9eff; }
+    .log-ok    { color: #25a855; }
+    .log-warn  { color: #e6a817; }
+    .log-err   { color: #e74c3c; }
+    .log-data  { color: #666; }
+    .log-sep   { color: #1e1e1e; margin: 4px 0; letter-spacing: -1px; }
+  </style>
+</head>
+<body>
+
+<h1>Controle do Portão</h1>
+
+<!-- Config Panel -->
+<div id="config-panel" class="panel">
+  <h2>⚙ Configuração Tuya</h2>
+
+  <label>Client ID</label>
+  <input type="text" id="clientId" placeholder="Ex: a1b2c3d4e5f6..." />
+
+  <label>Client Secret</label>
+  <input type="password" id="clientSecret" placeholder="Ex: xxxxxxxxxxxx" />
+
+  <label>Device ID</label>
+  <input type="text" id="deviceId" placeholder="Ex: bf1234..." />
+
+  <label>Região</label>
+  <select id="region">
+    <option value="https://openapi.tuyaus.com">América (us)</option>
+    <option value="https://openapi.tuyaeu.com" selected>Europa (eu)</option>
+    <option value="https://openapi.tuyacn.com">China (cn)</option>
+    <option value="https://openapi.tuyain.com">Índia (in)</option>
+  </select>
+
+  <label>DP Code</label>
+  <input type="text" id="dpCode" placeholder="Ex: switch_1 ou mach_operate" />
+  <small>Tuya IoT Platform → Device → Function → DP Code</small>
+
+  <label>Valor para ABRIR</label>
+  <input type="text" id="valOpen" placeholder='Ex: true  ou  "open"' />
+
+  <label>Valor para FECHAR</label>
+  <input type="text" id="valClose" placeholder='Ex: false  ou  "close"' />
+
+  <!-- Proxy selector -->
+  <div style="margin-top:18px; background:#111; border:1px solid #222; border-radius:10px; padding:14px;">
+    <div style="font-size:0.75rem;color:#555;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">
+      🔀 Proxy CORS
+    </div>
+    <select id="proxyMode">
+      <option value="corsproxy">corsproxy.io (recomendado)</option>
+      <option value="allorigins">allorigins.win</option>
+      <option value="none">Sem proxy (pode dar CORS)</option>
+    </select>
+    <div class="proxy-status" id="proxyStatus">
+      O proxy repassa suas requisições para a API Tuya contornando o bloqueio CORS do navegador.
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveConfig()">💾 Salvar configuração</button>
+</div>
+
+<button class="toggle-btn" id="toggleBtn" onclick="toggleConfig()">Ocultar configuração</button>
+
+<!-- Botões de controle -->
+<div class="buttons">
+  <button class="btn btn-open" id="btnOpen" onclick="sendCommand('open')">
+    <div class="spinner"></div>
+    <div class="btn-content">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7"/>
+      </svg>
+      ABRIR
+    </div>
+  </button>
+  <button class="btn btn-close" id="btnClose" onclick="sendCommand('close')">
+    <div class="spinner"></div>
+    <div class="btn-content">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      FECHAR
+    </div>
+  </button>
+</div>
+
+<div id="status">Configure as credenciais acima e salve.</div>
+
+<!-- Log Panel -->
+<div id="log-panel">
+  <div class="log-header">
+    <span>📋 Log de requisições</span>
+    <button class="log-clear" onclick="clearLog()">Limpar</button>
+  </div>
+  <div id="log-box">
+    <div class="log-entry log-data">Aguardando ação...</div>
+  </div>
+</div>
+
+<script>
+// ── Logger ────────────────────────────────────────────────────────────────────
+function nowStr() {
+  return new Date().toLocaleTimeString('pt-BR', { hour12: false });
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function log(msg, type='info') {
+  const box = document.getElementById('log-box');
+  const d = document.createElement('div');
+  d.className = 'log-entry';
+  d.innerHTML = `<span class="log-time">${nowStr()}</span><span class="log-${type}">${esc(msg)}</span>`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+function logJson(label, obj) {
+  log(label + ':', 'data');
+  const box = document.getElementById('log-box');
+  JSON.stringify(obj, null, 2).split('\n').forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'log-entry';
+    d.innerHTML = `<span class="log-data">&nbsp;&nbsp;${esc(l)}</span>`;
+    box.appendChild(d);
+  });
+  document.getElementById('log-box').scrollTop = 9999;
+}
+function logSep() {
+  const box = document.getElementById('log-box');
+  const d = document.createElement('div');
+  d.className = 'log-sep';
+  d.textContent = '─'.repeat(52);
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+function clearLog() {
+  document.getElementById('log-box').innerHTML = '<div class="log-entry log-data">Log limpo.</div>';
+}
+
+// ── Proxy wrapper ─────────────────────────────────────────────────────────────
+function proxify(url) {
+  const mode = cfg('proxyMode');
+  if (mode === 'corsproxy')  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  if (mode === 'allorigins') return `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  return url; // sem proxy
+}
+
+// ── Fetch com log ─────────────────────────────────────────────────────────────
+async function fetchWithLog(step, url, options = {}) {
+  const proxyUrl = proxify(url);
+  const usingProxy = proxyUrl !== url;
+  log(`[${step}] ${options.method || 'GET'} → ${url}`, 'info');
+  if (usingProxy) log(`[${step}] via proxy: ${proxyUrl.split('?')[0]}`, 'data');
+
+  let res, data, text;
+  try {
+    res  = await fetch(proxyUrl, options);
+    text = await res.text();
+  } catch (err) {
+    log(`[${step}] ✗ Falha de rede: ${err.name} – ${err.message}`, 'err');
+    if (err.name === 'TypeError') {
+      log(`[${step}] → Provável CORS ou sem internet.`, 'warn');
+      if (cfg('proxyMode') === 'none') {
+        log(`[${step}] → Tente mudar o Proxy CORS nas configurações!`, 'warn');
+      }
+    }
+    throw err;
+  }
+
+  log(`[${step}] HTTP ${res.status} ${res.statusText}`, res.ok ? 'info' : 'warn');
+
+  try {
+    data = JSON.parse(text);
+    logJson(`[${step}] Resposta`, data);
+  } catch {
+    log(`[${step}] Resposta (texto): ${text.slice(0, 300)}`, 'data');
+    throw new Error(`Resposta não é JSON válido. Verifique o proxy ou a região.`);
+  }
+
+  return data;
+}
+
+// ── Cripto ────────────────────────────────────────────────────────────────────
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function hmacSHA256(key, msg) {
+  const k = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(key),
+    { name:'HMAC', hash:'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+function parseValue(v) {
+  v = v.trim();
+  if (v === 'true')  return true;
+  if (v === 'false') return false;
+  const n = Number(v);
+  if (!isNaN(n) && v !== '') return n;
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'")))
+    return v.slice(1,-1);
+  return v;
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+function cfg(k) { return document.getElementById(k).value.trim(); }
+
+function saveConfig() {
+  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode']
+    .forEach(k => localStorage.setItem('tuyaCtrl_'+k, document.getElementById(k).value));
+  log('Configuração salva.', 'ok');
+  setStatus('✓ Configuração salva!', 'ok');
+}
+function loadConfig() {
+  ['clientId','clientSecret','deviceId','region','dpCode','valOpen','valClose','proxyMode'].forEach(k => {
+    const v = localStorage.getItem('tuyaCtrl_'+k);
+    if (v !== null) document.getElementById(k).value = v;
+  });
+}
+function toggleConfig() {
+  const p = document.getElementById('config-panel');
+  const b = document.getElementById('toggleBtn');
+  if (p.style.display === 'none') { p.style.display='block'; b.textContent='Ocultar configuração'; }
+  else { p.style.display='none'; b.textContent='Mostrar configuração'; }
+}
+
+// ── Tuya API ──────────────────────────────────────────────────────────────────
+async function getToken() {
+  const clientId     = cfg('clientId');
+  const clientSecret = cfg('clientSecret');
+  const baseUrl      = cfg('region');
+  const t            = Date.now().toString();
+  const bodyHash     = await sha256Hex('');
+  const strToSign    = clientId + t + '' + bodyHash;
+  const sign         = (await hmacSHA256(clientSecret, strToSign)).toUpperCase();
+
+  log(`[1] Assinatura gerada para token`, 'data');
+  logJson('[1] String assinada (resumo)', { clientId: clientId.slice(0,6)+'***', t, bodyHash });
+
+  const data = await fetchWithLog('1', `${baseUrl}/v1.0/token?grant_type=1`, {
+    headers: {
+      'client_id':   clientId,
+      'sign':        sign,
+      'sign_method': 'HMAC-SHA256',
+      't':           t,
+      'nonce':       '',
+    }
+  });
+
+  if (!data.success) throw new Error(`Token: ${data.msg} (code ${data.code})`);
+  log(`[1] ✓ Token OK`, 'ok');
+  return data.result.access_token;
+}
+
+async function sendTuyaCommand(action) {
+  const clientId     = cfg('clientId');
+  const clientSecret = cfg('clientSecret');
+  const deviceId     = cfg('deviceId');
+  const baseUrl      = cfg('region');
+  const dpCode       = cfg('dpCode') || 'switch_1';
+  const rawVal       = action === 'open' ? cfg('valOpen') : cfg('valClose');
+  const value        = parseValue(rawVal || (action === 'open' ? 'true' : 'false'));
+
+  log(`Ação: ${action.toUpperCase()} | dpCode=${dpCode} | value=${JSON.stringify(value)}`, 'info');
+
+  const token    = await getToken();
+  const body     = JSON.stringify({ commands: [{ code: dpCode, value }] });
+  const t        = Date.now().toString();
+  const bodyHash = await sha256Hex(body);
+  const path     = `/v1.0/devices/${deviceId}/commands`;
+  const strSign  = clientId + token + t + '' + 'POST\n' + bodyHash + '\n\n' + path;
+  const sign     = (await hmacSHA256(clientSecret, strSign)).toUpperCase();
+
+  log(`[2] Assinatura gerada para comando`, 'data');
+  logJson('[2] Body a enviar', { commands: [{ code: dpCode, value }] });
+
+  const data = await fetchWithLog('2', `${baseUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'client_id':    clientId,
+      'access_token': token,
+      'sign':         sign,
+      'sign_method':  'HMAC-SHA256',
+      't':            t,
+      'nonce':        '',
+      'Content-Type': 'application/json',
+    },
+    body
+  });
+
+  if (!data.success) throw new Error(`Comando: ${data.msg} (code ${data.code})`);
+  log(`[2] ✓ Comando aceito pela API!`, 'ok');
+  return data;
+}
+
+// ── UI ────────────────────────────────────────────────────────────────────────
+function setStatus(msg, type='') {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className   = type;
+}
+function setLoading(btnId, on) {
+  const btn   = document.getElementById(btnId);
+  const other = btnId === 'btnOpen' ? 'btnClose' : 'btnOpen';
+  if (on) {
+    btn.classList.add('loading'); btn.disabled = true;
+    document.getElementById(other).disabled = true;
+  } else {
+    btn.classList.remove('loading'); btn.disabled = false;
+    document.getElementById(other).disabled = false;
+  }
+}
+async function sendCommand(action) {
+  if (!cfg('clientId') || !cfg('clientSecret') || !cfg('deviceId')) {
+    setStatus('⚠ Preencha e salve as credenciais primeiro.', 'err');
+    log('Tentativa sem credenciais.', 'warn');
+    return;
+  }
+  logSep();
+  const btnId = action === 'open' ? 'btnOpen' : 'btnClose';
+  setLoading(btnId, true);
+  setStatus('Enviando comando…');
+  try {
+    await sendTuyaCommand(action);
+    setStatus(action === 'open' ? '✓ Portão abrindo!' : '✓ Portão fechando!', 'ok');
+    log('✓ Fluxo concluído com sucesso.', 'ok');
+  } catch(e) {
+    setStatus('✗ Erro: ' + e.message, 'err');
+    log('✗ ' + e.message, 'err');
+  } finally {
+    setLoading(btnId, false);
+    logSep();
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadConfig();
+log('Página iniciada. Proxy ativo: ' + (cfg('proxyMode') || 'corsproxy'), 'info');
+</script>
+</body>
+</html>
