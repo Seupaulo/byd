@@ -159,7 +159,7 @@
             font-weight: 500;
         }
         
-        input[type="number"] { 
+        input[type="number"], input[type="text"] { 
             width: 100%; 
             padding: 12px 14px; 
             border-radius: 8px; 
@@ -172,7 +172,7 @@
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         
-        input[type="number"]:focus {
+        input[type="number"]:focus, input[type="text"]:focus {
             outline: none;
             border-color: var(--border-focus);
             box-shadow: 0 0 8px rgba(0, 255, 157, 0.2);
@@ -667,7 +667,7 @@
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <div class="input-group">
                         <label>Odômetro Total Atual (km):</label>
-                        <input type="number" id="kTotal" placeholder="Ex: 5200 (Use 0 para manter anterior)">
+                        <input type="text" id="kTotal" inputmode="decimal" placeholder="Ex: 5200,5 (Use 0 para manter anterior)">
                     </div>
                     
                     <div class="input-group">
@@ -1026,7 +1026,7 @@
         idRegistroEditando = id;
         
         // Alimenta o formulário com dados
-        document.getElementById('kTotal').value = registro.kTotal || '';
+        document.getElementById('kTotal').value = registro.kTotal !== undefined ? String(registro.kTotal).replace('.', ',') : '';
         document.getElementById('bRest').value = registro.bRest !== undefined ? registro.bRest : '';
         document.getElementById('bIni').value = registro.bIni !== undefined ? registro.bIni : '';
         
@@ -1269,7 +1269,7 @@
 
     // ADICIONAR OU SALVAR EDIÇÃO DE REGISTRO
     function adicionarDados() {
-        var kTotalInput = document.getElementById('kTotal').value;
+        var kTotalInput = document.getElementById('kTotal').value.trim();
         var bIni = parseFloat(document.getElementById('bIni').value);
         var bRest = parseFloat(document.getElementById('bRest').value);
         
@@ -1309,7 +1309,7 @@
         }
         var listaOrdenadaValidacao = ordenarListaPorData(listaParaValidacao);
         
-        var kTotal = parseFloat(kTotalInput);
+        var kTotal = parseFloat(kTotalInput.replace(',', '.'));
         
         // Trata o odômetro
         if (isNaN(kTotal) || kTotal === 0) {
@@ -1426,6 +1426,11 @@
         });
     }
 
+    function formatarNumero(num, casas = 1) {
+        if (isNaN(num) || num === null || num === undefined) return "-";
+        return num.toFixed(casas).replace('.', ',');
+    }
+
     // REDESENHAR INTERFACE E TABELA
     function desenharInterface() {
         var listaCrua = storage.getList('byd_local_data_v5');
@@ -1500,11 +1505,11 @@
                 } catch(e) { console.log("Erro fuso data", e); }
             }
             
-            var txtKmGeral = r.kTotal + " km";
-            var txtDelta = r.exibirDelta > 0 ? " (+" + r.exibirDelta + " km)" : "";
+            var txtKmGeral = formatarNumero(r.kTotal, 1) + " km";
+            var txtDelta = r.exibirDelta > 0 ? " (+" + formatarNumero(r.exibirDelta, 1) + " km)" : "";
             var txtBatGasta = r.exibirBateriaGasta > 0 ? r.exibirBateriaGasta + "%" : "-";
-            var txtMedia = r.exibirMedia > 0 ? r.exibirMedia.toFixed(2) + " kWh/100km" : "-";
-            var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + r.exibirCustoKm.toFixed(2) : "-";
+            var txtMedia = r.exibirMedia > 0 ? formatarNumero(r.exibirMedia, 2) + " kWh/100km" : "-";
+            var txtCustoKm = r.exibirCustoKm > 0 ? "R$ " + formatarNumero(r.exibirCustoKm, 2) : "-";
 
             var badgeCarga = r.tipoCarga === 'AC' ? '<span class="badge badge-ac">AC (Lenta)</span>' : '<span class="badge badge-dc">DC (Rápida)</span>';
             var badgeModo = '<span class="badge badge-' + r.modoConducao.toLowerCase() + '">' + r.modoConducao + '</span>';
@@ -1524,25 +1529,25 @@
                            '<td>' + badgeModo + '</td>' +
                            '<td>' + txtBatGasta + '</td>' +
                            '<td class="txt-blue">' + txtMedia + '</td>' +
-                           '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
+                           '<td>R$ ' + formatarNumero(r.custoDinheiro, 2) + '</td>' +
                            '<td class="txt-green">' + txtCustoKm + '</td>' +
                            '<td><div style="display: flex; justify-content: center; gap: 8px;">' + btnEditar + btnDeletar + '</div></td>';
             corpo.appendChild(tr);
         }
 
         // Atualiza Cards Consolidados
-        document.getElementById('cardAcValor').innerText = "R$ " + resumo.acGasto.toFixed(2);
-        document.getElementById('cardAcKm').innerText = resumo.acKm.toFixed(1) + " km";
-        document.getElementById('cardAcCustoKm').innerText = "R$ " + (resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm).toFixed(2) : "0.00") + " / km";
+        document.getElementById('cardAcValor').innerText = "R$ " + formatarNumero(resumo.acGasto, 2);
+        document.getElementById('cardAcKm').innerText = formatarNumero(resumo.acKm, 1) + " km";
+        document.getElementById('cardAcCustoKm').innerText = "R$ " + formatarNumero(resumo.acKm > 0 ? (resumo.acGasto / resumo.acKm) : 0, 2) + " / km";
 
-        document.getElementById('cardDcValor').innerText = "R$ " + resumo.dcGasto.toFixed(2);
-        document.getElementById('cardDcKm').innerText = resumo.dcKm.toFixed(1) + " km";
-        document.getElementById('cardDcCustoKm').innerText = "R$ " + (resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm).toFixed(2) : "0.00") + " / km";
+        document.getElementById('cardDcValor').innerText = "R$ " + formatarNumero(resumo.dcGasto, 2);
+        document.getElementById('cardDcKm').innerText = formatarNumero(resumo.dcKm, 1) + " km";
+        document.getElementById('cardDcCustoKm').innerText = "R$ " + formatarNumero(resumo.dcKm > 0 ? (resumo.dcGasto / resumo.dcKm) : 0, 2) + " / km";
 
-        document.getElementById('cardTotalKm').innerText = resumo.totalKm.toFixed(1) + " km";
-        document.getElementById('cardTotalGasto').innerText = "R$ " + resumo.totalGasto.toFixed(2);
-        document.getElementById('cardTotalMediaKwh').innerText = (resumo.totalKm > 0 ? ((resumo.totalKwh * 100) / resumo.totalKm).toFixed(2) : "0.00") + " kWh/100km";
-        document.getElementById('cardTotalCustoKm').innerText = "R$ " + (resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm).toFixed(2) : "0.00") + " / km";
+        document.getElementById('cardTotalKm').innerText = formatarNumero(resumo.totalKm, 1) + " km";
+        document.getElementById('cardTotalGasto').innerText = "R$ " + formatarNumero(resumo.totalGasto, 2);
+        document.getElementById('cardTotalMediaKwh').innerText = formatarNumero(resumo.totalKm > 0 ? ((resumo.totalKwh * 100) / resumo.totalKm) : 0, 2) + " kWh/100km";
+        document.getElementById('cardTotalCustoKm').innerText = "R$ " + formatarNumero(resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm) : 0, 2) + " / km";
     }
 
     // PURGAÇÃO COMPLETA DE CACHE ANTERIOR
