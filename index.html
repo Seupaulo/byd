@@ -507,6 +507,8 @@
 
         /* Botão Editar Linha */
         .btn-edit-row {
+            width: auto;
+            margin-top: 0;
             background: transparent;
             border: none;
             color: var(--accent-blue);
@@ -514,6 +516,7 @@
             font-size: 15px;
             padding: 6px 10px;
             border-radius: 6px;
+            box-shadow: none;
             transition: background 0.2s, transform 0.1s;
         }
         .btn-edit-row:hover {
@@ -526,6 +529,8 @@
 
         /* Botão Deletar Linha */
         .btn-del-row {
+            width: auto;
+            margin-top: 0;
             background: transparent;
             border: none;
             color: #ef4444;
@@ -533,6 +538,7 @@
             font-size: 15px;
             padding: 6px 10px;
             border-radius: 6px;
+            box-shadow: none;
             transition: background 0.2s, transform 0.1s;
         }
         .btn-del-row:hover {
@@ -1520,7 +1526,7 @@
                            '<td class="txt-blue">' + txtMedia + '</td>' +
                            '<td>R$ ' + r.custoDinheiro.toFixed(2) + '</td>' +
                            '<td class="txt-green">' + txtCustoKm + '</td>' +
-                           '<td>' + btnEditar + ' ' + btnDeletar + '</td>';
+                           '<td><div style="display: flex; justify-content: center; gap: 8px;">' + btnEditar + btnDeletar + '</div></td>';
             corpo.appendChild(tr);
         }
 
