@@ -795,6 +795,33 @@
         </div>
     </div>
 
+    <!-- Histórico Consolidado de Meses Anteriores -->
+    <div class="history-section" style="margin-top: 40px; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 25px;">
+        <div class="section-header" style="cursor: pointer; user-select: none;" onclick="toggleHistoricoMensal()">
+            <span>📂 Histórico Consolidado de Meses Anteriores</span>
+            <span id="chevronHistorico" style="font-size: 14px; margin-left: 8px; transition: transform 0.2s; display: inline-block;">▼</span>
+        </div>
+
+        <div id="conteudoHistoricoMensal" style="display: none; margin-top: 15px;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mês / Ano</th>
+                            <th>Nº de Recargas</th>
+                            <th>Distância Total</th>
+                            <th>Consumo Médio</th>
+                            <th>kWh Total Carregado</th>
+                            <th>Custo Total</th>
+                            <th>Custo Médio por KM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="linhasHistoricoMensal"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Modal Customizado Cockpit -->
@@ -1495,6 +1522,7 @@
         }
 
         var resumo = { acGasto: 0, acKm: 0, dcGasto: 0, dcKm: 0, totalKm: 0, totalGasto: 0, totalKwh: 0 };
+        var resumosMensais = {};
 
         // Processa médias invertendo temporariamente a lista de modo cronológico
         for (var i = lista.length - 1; i >= 0; i--) {
@@ -1521,6 +1549,25 @@
             item.exibirBateriaGasta = batGastaNaViagem > 0 ? batGastaNaViagem : 0;
             item.exibirMedia = mediaKwh;
             item.exibirCustoKm = custoPorKm;
+
+            // Agrupa e calcula para todos os meses
+            var chaveMes = item.mesAno;
+            if (!resumosMensais[chaveMes]) {
+                resumosMensais[chaveMes] = {
+                    totalGasto: 0,
+                    totalKm: 0,
+                    totalKwh: 0,
+                    qtdRecargas: 0
+                };
+            }
+            resumosMensais[chaveMes].qtdRecargas += 1;
+
+            if (deltaKm > 0) {
+                var kwhConsumidoNaViagem = (item.exibirBateriaGasta / 100) * capBateria;
+                resumosMensais[chaveMes].totalGasto += item.custoDinheiro;
+                resumosMensais[chaveMes].totalKm += deltaKm;
+                resumosMensais[chaveMes].totalKwh += kwhConsumidoNaViagem;
+            }
 
             // Calcula o fechamento mensal com base nas viagens do mês corrente
             if (item.mesAno === mesAtualChave && deltaKm > 0) {
@@ -1593,6 +1640,67 @@
         document.getElementById('cardTotalGasto').innerText = "R$ " + formatarNumero(resumo.totalGasto, 2);
         document.getElementById('cardTotalMediaKwh').innerText = formatarNumero(resumo.totalKm > 0 ? ((resumo.totalKwh * 100) / resumo.totalKm) : 0, 2) + " kWh/100km";
         document.getElementById('cardTotalCustoKm').innerText = "R$ " + formatarNumero(resumo.totalKm > 0 ? (resumo.totalGasto / resumo.totalKm) : 0, 2) + " / km";
+
+        // Renderiza o Histórico de Meses Anteriores
+        var corpoMensal = document.getElementById('linhasHistoricoMensal');
+        if (corpoMensal) {
+            corpoMensal.innerHTML = '';
+            
+            var chavesOrdenadas = Object.keys(resumosMensais).sort(function(a, b) {
+                var partesA = a.split('_');
+                var partesB = b.split('_');
+                var mesA = parseInt(partesA[0], 10);
+                var anoA = parseInt(partesA[1], 10);
+                var mesB = parseInt(partesB[0], 10);
+                var anoB = parseInt(partesB[1], 10);
+                
+                if (anoA !== anoB) return anoB - anoA;
+                return mesB - mesA;
+            });
+
+            for (var k = 0; k < chavesOrdenadas.length; k++) {
+                var chave = chavesOrdenadas[k];
+                if (chave === mesAtualChave) continue; // Pula o mês atual (já exibido no topo)
+                
+                var dadosMes = resumosMensais[chave];
+                var partes = chave.split('_');
+                var mesNome = mesesNome[parseInt(partes[0], 10) - 1];
+                var anoNome = partes[1];
+                var tituloMes = mesNome + " / " + anoNome;
+                
+                var mediaConsumo = dadosMes.totalKm > 0 ? (dadosMes.totalKwh * 100) / dadosMes.totalKm : 0;
+                var custoMedioKm = dadosMes.totalKm > 0 ? dadosMes.totalGasto / dadosMes.totalKm : 0;
+                
+                var trM = document.createElement('tr');
+                trM.innerHTML = '<td><b>' + tituloMes + '</b></td>' +
+                                '<td>' + dadosMes.qtdRecargas + '</td>' +
+                                '<td>' + formatarNumero(dadosMes.totalKm, 1) + ' km</td>' +
+                                '<td class="txt-blue">' + (dadosMes.totalKm > 0 ? formatarNumero(mediaConsumo, 2) + ' kWh/100km' : '-') + '</td>' +
+                                '<td>' + formatarNumero(dadosMes.totalKwh, 1) + ' kWh</td>' +
+                                '<td>R$ ' + formatarNumero(dadosMes.totalGasto, 2) + '</td>' +
+                                '<td class="txt-green">' + (dadosMes.totalKm > 0 ? 'R$ ' + formatarNumero(custoMedioKm, 2) + ' / km' : '-') + '</td>';
+                corpoMensal.appendChild(trM);
+            }
+
+            if (corpoMensal.innerHTML === '') {
+                var trM = document.createElement('tr');
+                trM.innerHTML = '<td colspan="7" style="color: var(--text-secondary); padding: 20px;">Nenhum histórico de mês anterior encontrado.</td>';
+                corpoMensal.appendChild(trM);
+            }
+        }
+    }
+
+    // Função de expansão/colapso do Histórico Mensal
+    function toggleHistoricoMensal() {
+        var conteudo = document.getElementById('conteudoHistoricoMensal');
+        var chevron = document.getElementById('chevronHistorico');
+        if (conteudo.style.display === 'none') {
+            conteudo.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            conteudo.style.display = 'none';
+            chevron.style.transform = 'rotate(0deg)';
+        }
     }
 
     // PURGAÇÃO COMPLETA DE CACHE ANTERIOR
